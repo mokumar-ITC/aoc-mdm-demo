@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AOC_MDM.Core", "AOC_MDM.Core\AOC_MDM.Core.csproj", "{C3F79C5F-DC12-4076-BBA5-A74DCC4837FA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AOC_MDM.Infrastrucure", "AOC_MDM.Infrastrucure\AOC_MDM.Infrastrucure.csproj", "{CE733D46-5550-403F-966B-FD1510E6A2A2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AOC_MDM.Services", "AOC_MDM.Services\AOC_MDM.Services.csproj", "{493E9829-7F72-4B36-B518-7AD5BC9D9553}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EncryptDecrypt", "EncryptDecrypt\EncryptDecrypt.csproj", "{43697FD4-F5D0-4D0F-8D4D-EAEB5E5BED04}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AOC_MDM_MetaData_GUI", "AOC_MDM_MetaData_GUI\AOC_MDM_MetaData_GUI.csproj", "{BE671F56-88A9-4EB0-A810-1256B44A4A73}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestDatabricks", "TestDatabricks\TestDatabricks.csproj", "{9609B197-0F8A-48C3-856E-2A902702350E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C3F79C5F-DC12-4076-BBA5-A74DCC4837FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3F79C5F-DC12-4076-BBA5-A74DCC4837FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3F79C5F-DC12-4076-BBA5-A74DCC4837FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3F79C5F-DC12-4076-BBA5-A74DCC4837FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE733D46-5550-403F-966B-FD1510E6A2A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE733D46-5550-403F-966B-FD1510E6A2A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE733D46-5550-403F-966B-FD1510E6A2A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE733D46-5550-403F-966B-FD1510E6A2A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{493E9829-7F72-4B36-B518-7AD5BC9D9553}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{493E9829-7F72-4B36-B518-7AD5BC9D9553}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{493E9829-7F72-4B36-B518-7AD5BC9D9553}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{493E9829-7F72-4B36-B518-7AD5BC9D9553}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43697FD4-F5D0-4D0F-8D4D-EAEB5E5BED04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43697FD4-F5D0-4D0F-8D4D-EAEB5E5BED04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43697FD4-F5D0-4D0F-8D4D-EAEB5E5BED04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43697FD4-F5D0-4D0F-8D4D-EAEB5E5BED04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE671F56-88A9-4EB0-A810-1256B44A4A73}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE671F56-88A9-4EB0-A810-1256B44A4A73}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE671F56-88A9-4EB0-A810-1256B44A4A73}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE671F56-88A9-4EB0-A810-1256B44A4A73}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9609B197-0F8A-48C3-856E-2A902702350E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9609B197-0F8A-48C3-856E-2A902702350E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9609B197-0F8A-48C3-856E-2A902702350E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9609B197-0F8A-48C3-856E-2A902702350E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {27F393FA-64C5-44B4-BF52-5479CBAE237B}
+	EndGlobalSection
+EndGlobal

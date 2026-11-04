@@ -1,0 +1,70 @@
+﻿@model AOCLevel1ViewModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<div>
+    <h2>Edit</h2>
+
+    <a asp-action="Index" class="btn btn-primary float-end" onclick="showloader()">Back to List</a>
+</div>
+<h4>Vendor Level 1</h4>
+<hr />
+<form asp-action="Edit" asp-route-id="@Model.Id">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="p-2 row row-cols-4">
+        <div class="form-group">
+            <label asp-for="Level1" class="control-label"></label>
+            <input asp-for="Level1" readonly class="form-control" />
+            <span asp-validation-for="Level1" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="SpendArea" class="control-label"></label>
+            <input asp-for="SpendArea" readonly class="form-control" />
+        </div>
+        <div class="form-group">
+
+            <label asp-for="Team" class="control-label"></label>
+            <select asp-items="@(new SelectList(Model.lst_Team))" asp-for="Team" class="form-select">
+                <option value="">NULL</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label asp-for="Enabled" class="control-label"></label>
+            <select asp-for="Enabled" name="Enabled" class="form-select">
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+            @* <span asp-validation-for="Enabled" class="text-danger"></span> *@
+        </div>
+
+       
+    </div>
+    <div class="p-2 row row-cols-2">
+        <div>
+            <input asp-for="originalTeam" class="form-control" style="display:none" />
+            <br />
+            <br />
+            <br />
+            <label class="control-label label-bold alert-success">Total number of affected records for item: @Model.TotalNoOfAffectedRecsOfItem </label><br />
+            <label class="control-label label-bold alert-success">Total number of affected records for vendor:  @Model.TotalNoOfAffectedRecsOfVendor </label>
+            <label class="control-label label-bold  alert-danger"><span class="alert-danger">Note-</span> If Team is NULL, it indicates that it is disabled, and no changes will be applied on Team.</label>
+
+        </div>
+        <div>
+            <input type="submit" value="Save" onclick="showloader()" class="btn btn-primary float-end" />
+        </div>
+    </div>
+</form>
+
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+}
+<script type="text/javascript">
+
+    $(function () {
+        $("#Team").select2();
+    });
+
+</script>

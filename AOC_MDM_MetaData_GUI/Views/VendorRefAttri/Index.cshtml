@@ -1,0 +1,327 @@
+﻿@model dynamic
+
+@{
+    ViewData["Title"] = "Vendor List";
+}
+<head>
+    <script src="https://raw.githubusercontent.com/botmonster/jquery-bootpag/master/lib/jquery.bootpag.min.js"></script>
+</head>
+
+
+<div class="pt-3">
+    @if (TempData["alertMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @* <strong>Success !</strong> *@
+            @TempData["alertMessage"]
+            <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
+            </button>
+        </div>
+    }
+    <h4>@(Model.filterValue == "__unmapped__" ? "Unmapped Vendors (no Level 3 assigned)" : "Vendor")</h4>
+    <div id="toolbar">
+        <form>
+            <div class="row row-cols-4">
+                <div class="col">
+                    <select id="filterType" name="filterType" class="form-select">
+                        <option value="">Select</option>
+                        <option value="source">Source</option>
+                        <option value="vendor_id">Vendor ID</option>
+                        <option value="vendor_number">Vendor Number</option>
+                        <option value="vendor_name">Vendor Name</option>
+                        <option value="vendor_english_name">English Name</option>
+                        <option value="vendor_family_name">Family Name</option>
+                        <option value="level_3">Level</option>
+                        <option value="spend_area">Spend Area</option>
+                        <option value="supplier_vendor">Supplier Vendor</option>
+                        <option value="intercompany">Intercompany</option>
+                        <option value="UpdateStatus">Status</option>
+                        <option value="UpdatedDate">Updated Date</option>
+
+                        <option value="parent_company">Parent Company</option>
+                        <option value="addressable_spend">Addressable Spend</option>
+                        <option value="payables_very_important_supplier">Payables Very Important Supplier</option>
+                        <option value="indirect_spend_owner">Indirect Spend Owner</option>
+
+                    </select>
+                    <input name="pageNum" value="@Model.pageNumber" style="display:none" />
+                    <input name="pageSizes" value="@Model.pageSize" style="display:none" />
+                </div>
+                <div class="col form-group">
+                    <input id="filterValue" name="filterValue" class="form-control" />
+                    <select id="statusValue" name="statusValue" class="form-select">
+                        <option value="">Select</option>
+                        <option value="PendingApproval">Pending Approval</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+                        <option value="UpdateDirectly">Update Directly</option>
+                        <option value="New">New</option>
+                    </select>
+                </div>
+                <div class="col form-group">
+                    <input type="button" value="Filter" class="btn btn-primary" onclick="searchClick()" />
+                    <a class="btn btn-primary" asp-action="Index" onclick="showloader()">  Reset</a>
+
+                </div>
+                <div class="col">
+                    <a class="btn btn-primary" onclick="BulkUpdate()">  BulkUpdate</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <table class="table table-bordered" id="table"
+           data-toggle="table"
+           data-toolbar="#toolbar"
+           data-show-columns-search="true"
+           data-sort-name="name"
+           data-sort-order="desc"
+           data-show-columns="true"
+           data-buttons-align="right"
+           data-search="true"
+           data-show-fullscreen="true"
+           data-virtual-scroll="true"
+           data-page-size="10"
+           data-page-number="1"
+           data-resizable="true">
+        <thead class="tb-header">
+            <tr>
+                <th data-sortable="true">
+                    Source
+                </th>
+                <th data-sortable="true" @(Model.filterColumnName == "vendor_id" ? "" : (GetColumn("Vendor Id", Model.selectedPageColumns) ? "" : "data-visible=false"))>
+                    Vendor Id
+                </th>
+                <th data-sortable="true">
+                    Vendor Number
+                </th>
+                <th data-sortable="true">
+                    Vendor Name
+                </th>
+                <th data-sortable="true">                  
+                    English Name
+                </th>
+                <th data-sortable="true">
+                    Family Name
+                </th>
+                <th data-sortable="true">
+                    Level
+                </th>
+                <th data-sortable="true">                   
+                    Spend Area
+                </th>
+
+                <th data-sortable="true">
+                    Intercompany
+                </th>
+                <th data-sortable="true">
+                    Status
+                </th>
+                <th data-sortable="true">
+                    Updated Date
+                </th>
+                <th data-sortable="true" @(Model.filterColumnName == "parent_company" ? "" : (GetColumn("Parent Company", Model.selectedPageColumns) ? "" : "data-visible=false"))>
+                    Parent Company
+                </th>
+                <th data-sortable="true" @(Model.filterColumnName == "supplier_vendor" ? "" : (GetColumn("Supplier", Model.selectedPageColumns) ? "" : "data-visible=false"))>
+                    Supplier
+                </th>
+                <th data-sortable="true" @(Model.filterColumnName == "addressable_spend" ? "" : (GetColumn("Address", Model.selectedPageColumns) ? "" : "data-visible=false"))>
+                    Address
+                </th>
+                <th data-sortable="true" @(Model.filterColumnName == "payables_very_important_supplier" ? "" : (GetColumn("Payables", Model.selectedPageColumns) ? "" : "data-visible=false"))>
+                    Payables
+                </th>
+                <th data-sortable="true" @(Model.filterColumnName == "indirect_spend_owner" ? "" : (GetColumn("Indirect", Model.selectedPageColumns) ? "" : "data-visible=false"))>
+                    Indirect
+                </th>
+
+                <th data-width="80">
+                    Action
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Items != null)
+            {
+                foreach (var vendor in Model.Items)
+                {
+                    <tr>
+
+                        <td>@vendor.Source</td>
+                        <td>@vendor.VendorId</td>
+                        <td>@vendor.VendorNumber</td>
+                        <td>@vendor.VendorName</td>
+                        <td>@vendor.VendorEnglishName</td>
+                        <td>@vendor.VendorFamilyName</td>
+                        <td>@vendor.Level3</td>
+                        <td>@vendor.SpendArea</td>
+                        <td>@vendor.Intercompany</td>
+                        <td>
+                            <span class="@(vendor.UpdateStatus=="PendingApproval" ? "badge rounded-pill alert-warning" :
+                                     vendor.UpdateStatus=="Approved" ? "badge rounded-pill alert-success" :
+                                      vendor.UpdateStatus=="UpdateDirectly" ? "badge rounded-pill alert-info" :
+                                     vendor.UpdateStatus=="Rejected" ? "badge rounded-pill alert-danger" : string.Empty)">
+                                @vendor.UpdateStatus
+                            </span>
+                        </td>
+                        <td>@(vendor.UpdatedDate?.ToString("dd-MM-yyyy HH:mm:ss"))</td>
+
+                        <td>@vendor.ParentCompany</td>
+                        <td>@vendor.SupplierVendor</td>
+                        <td>@vendor.AddressableSpend</td>
+                        <td>@vendor.PayablesVeryImportantSupplier</td>
+                        <td>@vendor.IndirectSpendOwner</td>
+                        <td>
+                            @if (vendor.UpdateStatus != "PendingApproval")
+                            {
+                                <a asp-action="Edit" onclick="showloader()" title="Edit" data-toggle="tooltip" asp-route-id="@vendor.VendorId"
+                                   asp-route-VendorName="@vendor.VendorName" asp-route-VendorNumber="@vendor.VendorNumber" asp-route-Source="@vendor.Source"
+                                   asp-route-SpendArea="@vendor.SpendArea"
+                                   class="btn btn-warning bi-pencil-square text-black"></a>
+
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="11" class="text-center">No vendors found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <div class="row row-cols-2 pt-3">
+        <div>
+            Showing @Model.toPageNumber to @Model.fromPageNumber of @Model.TotalCount rows
+            <select id="pageSize" style="width:70px">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+        </div>
+        <nav aria-label="Page navigation ">
+            <div class="pagination float-end"></div>
+        </nav>
+    </div>
+</div>
+
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+}
+
+<script>
+    @functions {
+        public bool GetColumn(string name, string selectedPageColumns)
+        {
+            string value = name;
+            if (!string.IsNullOrEmpty(selectedPageColumns) && selectedPageColumns.Contains(name))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+        $("#form-id").on("submit", function () {
+            $("#divLoading").show();
+        });
+    $("#divLoading").hide();
+    //$("#divLoading").show();
+    function showloader() {
+        $("#divLoading").show();
+    }
+    $('#filterType').val("@Model.filterColumnName");
+    $('#filterValue').val("@Model.filterValue");
+    $(document).ready(function () {
+        var filterType = $('select[name=filterType]').val()
+        if (filterType == "UpdateStatus") {
+            $("#filterValue").hide();
+            $("#filterValue").val("");
+            $("#statusValue").show();
+            $('#statusValue').val("@Model.filterValue");
+        } else {
+            $("#statusValue").val("");
+            $("#filterValue").show();
+            $("#statusValue").hide();
+
+        }
+    });
+    $('#pageSize').val(@Model.pageSize);
+
+    $("#pageSize").change(function () {
+        $("#divLoading").show();
+        var pageSize = $('select[id=pageSize]').val();
+        var selectedPageColumns = JSON.stringify($("#table").bootstrapTable('getVisibleColumns').map(function (it) {
+            return it.title.trim();
+        }))
+        var url = '@Url.Action("Index", "VendorRefAttri")' + '?pageNumber=' + 1 + '&pageSize=' + pageSize + '&filterColumnName=' + '@Model.filterColumnName' + '&filterValue=' + '@Model.filterValue' + '&selectedPageColumns=' + selectedPageColumns; // Change to your desired URL window.open(url, '_blank');
+        window.location.href = url;
+    })
+
+    function searchClick() {
+        $("#divLoading").show();
+        var pageSize = $('select[id=pageSize]').val();
+        var selectedPageColumns = JSON.stringify($("#table").bootstrapTable('getVisibleColumns').map(function (it) {
+            return it.title.trim();
+        }))
+        var url = '@Url.Action("Search", "VendorRefAttri")' + '?pageNumber=' + 1 + '&pageSize=' + '@Model.pageSize' + '&filterColumnName=' + $('select[name=filterType]').val() + '&filterValue=' + $('#filterValue').val() + '&statusValue=' + $('select[id=statusValue]').val() + '&selectedPageColumns=' + selectedPageColumns; // Change to your desired URL window.open(url, '_blank');
+        window.location.href = url;
+    }
+    // init bootpag
+
+    $('.pagination').bootpag({
+        total: @Model.totalPages,
+        page: @Model.pageNumber,
+        maxVisible: 10,
+        leaps: true,
+        firstLastUse: true,
+        first: '←',
+        last: '→',
+        wrapClass: 'pagination',
+        activeClass: 'active',
+        disabledClass: 'disabled',
+        nextClass: 'next',
+        prevClass: 'prev',
+        lastClass: 'last',
+        firstClass: 'first'
+    }).on("page", function (event, num) {
+        $("#divLoading").show();
+        var selectedPageColumns = JSON.stringify($("#table").bootstrapTable('getVisibleColumns').map(function (it) {
+            return it.title.trim();
+        }))
+        var url = '@Url.Action("Index", "VendorRefAttri")' + '?pageNumber=' + num + '&pageSize=' + '@Model.pageSize' + '&filterColumnName=' + '@Model.filterColumnName' + '&filterValue=' + '@Model.filterValue' + '&selectedPageColumns=' + selectedPageColumns; // Change to your desired URL window.open(url, '_blank');
+        window.location.href = url;
+
+    });
+
+    $("#statusValue").hide();
+    $("#filterType").change(function () {
+        var filterType = $('select[name=filterType]').val()
+        if (filterType == "UpdateStatus") {
+            $("#filterValue").hide();
+            $("#filterValue").val("");
+            $("#statusValue").show();
+        } else {
+            $("#filterValue").show();
+            $("#statusValue").hide();
+        }
+    });
+
+    function BulkUpdate() {
+        $("#divLoading").show();
+        // var selectedPageColumns = JSON.stringify($("#table").bootstrapTable('getVisibleColumns').map(function (it) {
+        //     return it.title.trim();
+        // }))
+        var selectedPageColumns = "";
+        var pageSize = $('select[id=pageSize]').val();
+        var searchValue1 = $('.bootstrap-table .search input').val();
+        var url = '@Url.Action("BulkUpdate", "VendorRefAttri")' + '?pageNumber=' + '@Model.pageNumber' + '&pageSize=' + pageSize + '&filterColumnName=' + '@Model.filterColumnName' + '&filterValue=' + '@Model.filterValue' + '&selectedPageColumns=' + selectedPageColumns + '&search=' + searchValue1; // Change to your desired URL window.open(url, '_blank');
+        window.location.href = url;
+    }
+</script>

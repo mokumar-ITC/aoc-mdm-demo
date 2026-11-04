@@ -1,0 +1,127 @@
+﻿@model IEnumerable<AOC_MDM.Core.Entities.MDMItemSupplierRefAttributesAudit>
+
+@{
+    ViewData["Title"] = "Item List";
+}
+
+<div>
+    @if (TempData["alertMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["alertMessage"]
+            <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
+            </button>
+        </div>
+    }
+
+    <div id="toolbar">
+        <h4>Item Supplier Approval</h4>
+    </div>
+
+
+    @* data-custom-sort="customSort" *@
+    <table class="table table-bordered" id="table"
+           data-toggle="table"
+           data-toolbar="#toolbar"
+           data-show-columns-search="true"
+           data-sort-name="name"
+           data-sort-order="desc"
+           data-show-columns="true"
+           data-buttons-align="right"
+           data-search="true"
+           data-show-fullscreen="true"
+           data-pagination="true"
+           data-resizable="true">
+        <thead class="tb-header">
+            <tr>
+                <th data-sortable="true">
+                    Item Id
+                </th>
+                <th data-sortable="true">
+                    @Html.DisplayNameFor(model => model.Source)
+                </th>
+                <th data-sortable="true">
+                    Vendor Id
+                </th>
+                <th data-sortable="true">
+                    Risk Transfer
+                </th>
+                <th data-sortable="true">
+                    Supplier Specific Requirements
+                </th>
+                <th data-sortable="true" data-visible="false">
+                    Formula Non Formula
+                </th>
+
+                <th data-sortable="true" data-visible="false">
+                    Updated Date
+                </th>
+
+
+                <th>Action</th>
+            </tr>
+
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.ItemId)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Source)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.VendorId)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.RiskTransfer)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.SupplierSpecificRequirements)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.FormulaNonFormula)
+                        </td>
+
+                        <td>@(item.UpdatedDate?.ToString("dd-MM-yyyy HH:mm:ss"))</td>
+
+                        <td>
+
+                            <a asp-action="Approve" onclick="showloader()" data-toggle="tooltip" title="Info" asp-route-id="@item.ItemId" asp-route-vendorId="@item.VendorId" asp-route-source="@item.Source" class="btn btn-info bi bi-info-circle text-black"></a>
+
+                            <a asp-action="Approved" title="Approved" data-toggle="tooltip" asp-route-id="@item.AuditId" class="btn btn-success bi bi-check-circle text-white"
+                               onclick="return confirm('Do you really want to Approve this Item?');"></a>
+
+                            <a asp-action="Reject" onclick="showloader()" title="Rejected" data-toggle="tooltip" asp-route-id="@item.AuditId" class="btn btn-danger bi bi-x-circle  text-white"></a>
+
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="11" class="text-center">No Item found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div>
+        @if (ViewBag.TotalPages > 1)
+        {
+            for (int i = 1; i <= ViewBag.TotalPages; i++)
+            {
+                <a asp-action="Index" asp-route-pageNumber="@i" class="btn btn-secondary">@i</a>
+            }
+        }
+    </div>
+</div>
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+}

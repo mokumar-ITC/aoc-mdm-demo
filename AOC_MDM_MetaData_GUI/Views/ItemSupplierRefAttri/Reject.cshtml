@@ -1,0 +1,72 @@
+﻿@model AOC_MDM.Core.Entities.MDMItemSupplierRefAttributesAudit
+@{
+    ViewData["Title"] = "Reject";
+}
+
+<div>
+    <h2>Reject</h2>
+
+    <a asp-action="ItemSupplierAudit" class="btn btn-primary float-end" onclick="showloader()">Back to List</a>
+</div>
+<h4>Item Supplier Ref Attributes</h4>
+<hr />
+<form asp-action="Reject">
+    
+    <div class="p-2 row row-cols-4">
+        <div class="form-group">
+            <label asp-for="ItemId" class="control-label">Item Id</label>
+            <input asp-for="ItemId" readonly class="form-control" />
+           
+        </div>
+        <div class="form-group">
+            <label asp-for="Source" class="control-label"></label>
+            <input asp-for="Source" readonly class="form-control" />
+            
+        </div>
+        <div class="form-group">
+            <label asp-for="VendorId" class="control-label">Vendor Id</label>
+            <input asp-for="VendorId" readonly class="form-control" />
+           
+        </div>
+
+        <div class="form-group">
+            <label asp-for="RiskTransfer"  class="control-label">Risk Transfer</label>
+            <input asp-for="RiskTransfer" readonly class="form-control" />
+           
+        </div>
+    </div>
+    <div class="p-2 row row-cols-4">
+        <div class="form-group">
+        <label asp-for="SupplierSpecificRequirements" class="control-label">Supplier Specific Requirements</label>
+        <input asp-for="SupplierSpecificRequirements" readonly class="form-control" />
+       
+    </div>
+    <div class="form-group">
+        <label asp-for="FormulaNonFormula" class="control-label">Formula Non Formula</label>
+        <input asp-for="FormulaNonFormula" readonly class="form-control" />
+        
+    </div>
+        <div class="col form-grou disabled">
+            <label asp-for="AuditId" class="control-label">Audit Id</label>
+            <input asp-for="AuditId" class="form-control" readonly />
+
+        </div>
+
+
+        <div class="col form-group">
+            Remark
+            <textarea class="form-control" rows="3" asp-for="Remarks" name="Remarks" id="Remarks" placeholder="review comment" required></textarea>
+            <span asp-validation-for="Remarks" class="text-danger"></span>
+        </div>
+        <div class="col form-group">
+            <br />
+        <input type="submit" value="Submit" class="btn btn-primary" />
+        </div>
+    </div>
+</form>
+
+
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+    // await Html.RenderPartialAsync("_ValidationScriptsPartial");
+}

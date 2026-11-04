@@ -1,0 +1,107 @@
+﻿@model AOCLevel3ViewModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<div>
+    <h2>Edit</h2>
+
+    <a asp-action="Index" class="btn btn-primary float-end" onclick="showloader()">Back to List</a>
+</div>
+<h4>Vendor Level 3</h4>
+<hr />
+<form asp-action="Edit" asp-route-id="@Model.Id">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="p-2 row row-cols-4">
+        <div class="form-group">
+            <label asp-for="Level3" class="control-label"></label>
+            <input asp-for="Level3" readonly class="form-control" />
+           
+        </div>
+        <div class="form-group">
+            <label asp-for="Level2" class="control-label"></label>
+            <select asp-items="@(new SelectList(Model.lst_Level))" asp-for="Level2" class="form-select">
+                <option value="">NULL</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label asp-for="Level1" class="control-label"></label>
+            <input asp-for="Level1" readonly class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="Team" class="control-label"></label>
+            <input asp-for="Team" readonly class="form-control" />
+        </div>
+    </div>
+    <div class="p-2 row row-cols-4">
+        <div class="form-group">
+            <label asp-for="SpendArea" class="control-label"></label>
+            <input asp-for="SpendArea" readonly class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="Feedstock1" class="control-label"></label>
+            <input asp-for="Feedstock1" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="Feedstock2" class="control-label"></label>
+            <input asp-for="Feedstock2" class="form-control" />
+        </div>
+    
+        <div class="form-group">
+            <label asp-for="Feedstock3" class="control-label"></label>
+            <input asp-for="Feedstock3" class="form-control" />
+        </div>
+    </div>
+    <div class="p-2 row row-cols-4">
+        <div class="form-group">
+            <label asp-for="Hazardous" class="control-label"></label>
+            <select asp-for="Hazardous" class="form-select">
+                <option value="">Select</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label asp-for="ConflictMineralForcedLaborRegCheck" class="control-label">Conflict Mineral Forced Labor Reg Check</label>
+            <select asp-for="ConflictMineralForcedLaborRegCheck" class="form-select">
+                <option value="">Select</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label asp-for="Enabled" class="control-label"></label>
+            <select asp-for="Enabled" class="form-select">
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+            @* <span asp-validation-for="Enabled" class="text-danger"></span> *@
+        </div>
+    </div>
+    <div class="p-2 row row-cols-2">
+        <div>
+            <input asp-for="originalLevel2" class="form-control" style="display:none" />
+            <br />
+            <br />
+            <br />
+            <label class="control-label label-bold alert-success">Total number of affected records for item: @Model.TotalNoOfAffectedRecsOfItem </label><br />
+            <label class="control-label label-bold alert-success">Total number of affected records for vendor:  @Model.TotalNoOfAffectedRecsOfVendor </label>
+            <label class="control-label label-bold  alert-danger"><span class="alert-danger">Note-</span> If Level 2 is NULL, it indicates that it is disabled, and no changes will be applied on Level 2.</label>
+
+        </div>
+        <div>
+            <input type="submit" value="Save" class="btn btn-primary float-end" onclick="showloader()" />
+        </div>
+    </div>
+</form>
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+}
+<script type="text/javascript">
+
+    $(function () {
+        $("#Level2").select2();
+    });
+
+</script>

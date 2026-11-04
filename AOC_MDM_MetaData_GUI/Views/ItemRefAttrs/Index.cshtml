@@ -1,0 +1,336 @@
+﻿@model dynamic
+@{
+    ViewData["Title"] = "Index";
+}
+<div class="pt-3">
+    @if (TempData["alertMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["alertMessage"]
+            <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
+            </button>
+        </div>
+    }
+    <h4>@(Model.filterValue == "__unmapped__" ? "Unmapped Items (no Level 3 assigned)" : "Item")</h4>
+    <div id="toolbar">
+        <form>
+            <div class="row row-cols-4">
+                <div class="col">
+                    <select id="filterType" name="filterType" class="form-select">
+                        <option value="">Select</option>
+                        <option value="source">Source</option>
+                        <option value="item_id">Item Id</option>
+                        <option value="item_no">Item Number</option>
+                        <option value="item_description">Item Description</option>
+                        <option value="item_english_name">English Name</option>
+                        <option value="level_3">Level 3</option>
+                        <option value="spend_area">Spend Area</option>
+                        <option value="addressable_spend">Addressable Spend</option>
+                        <option value="current_wave_plan">Current Wave</option>
+
+                        <option value="UpdateStatus">Status</option>
+                        <option value="UpdatedDate">Updated Date</option>
+
+                        <option value="cas_number">Cas Number</option>
+                        <option value="item_form">Item Form</option>
+                        <option value="material_criticality_based_on_revenue">Material Criticality Based On Revenue</option>
+                        @* <option value="indirect_spend_owner">Indirect Spend Owner</option> *@
+
+                    </select>
+                    <input name="pageNum" value="@Model.pageNumber" style="display:none" />
+                    <input name="pageSizes" value="@Model.pageSize" style="display:none" />
+                </div>
+                <div class="col form-group">
+                    <input id="filterValue" name="filterValue" class="form-control" />
+                    <select id="statusValue" name="statusValue" class="form-select">
+                        <option value="">Select</option>
+                        <option value="PendingApproval">Pending Approval</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+                        <option value="UpdateDirectly">Update Directly</option>
+                        <option value="New">New</option>
+                    </select>
+                </div>
+                <div class="col form-group">
+                    <input type="button" value="Filter" class="btn btn-primary" onclick="searchClick()" />
+                    <a class="btn btn-primary" asp-action="Index" onclick="showloader()">  Reset</a>
+                </div>
+                <div class="col">
+                    <a class="btn btn-primary" onclick="BulkUpdate()">  BulkUpdate</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+
+    <table class="table table-bordered" id="table"
+           data-toggle="table"
+           data-toolbar="#toolbar"
+           data-show-columns-search="true"
+           data-sort-name="name"
+           data-sort-order="desc"
+           data-show-columns="true"
+           data-buttons-align="right"
+           data-search="true"
+           data-show-fullscreen="true"
+           data-page-size="10"
+           data-page-number="1"
+           data-resizable="true">
+        <thead class="tb-header">
+            <tr>
+                <th data-sortable="true">
+                   @*  //data-sorter="Sorter" *@
+                    Source
+                </th>
+               
+                <th data-sortable="true" @(Model.filterColumnName == "item_id" ? "" : (GetColumn("Item Id", Model.selectedPageColumns) ? "" : "data-visible=false"))>
+                    Item Id
+                </th>
+                <th data-sortable="true">
+                    Item Number
+                </th>
+                <th data-sortable="true">
+                    Item Description
+                </th>
+                <th data-sortable="true">
+                    @* @(Model.filterColumnName == "item_english_name" ? "" : "data-visible=false") *@
+                    English Name
+                </th>
+                <th data-sortable="true">
+                    @*  @(Model.filterColumnName == "level_3" ? "" : "data-visible=false") *@
+                    Level3
+                </th>
+                <th data-sortable="true">
+                    Spend Area
+                </th>
+                <th data-sortable="true">
+                    Addressable Spend
+                </th>
+                <th data-sortable="true">
+                    Current Wave
+                </th>
+
+                <th data-sortable="true">
+                    Status
+                </th>
+                <th data-sortable="true">
+                    Update Date
+                </th>
+                <th data-sortable="true" @(Model.filterColumnName == "cas_number" ? "" : (GetColumn("Cas Number", Model.selectedPageColumns) ? "" : "data-visible=false"))>
+                    Cas Number
+                </th>
+                <th data-sortable="true" @(Model.filterColumnName == "item_form" ? "" : (GetColumn("Item Form", Model.selectedPageColumns) ? "" : "data-visible=false"))>
+                    Item Form
+                </th>
+                <th data-sortable="true" @(Model.filterColumnName == "material_criticality_based_on_revenue" ? "" : (GetColumn("Material Criticality", Model.selectedPageColumns) ? "" : "data-visible=false"))>
+                    Material Criticality
+                </th>
+               
+                <th data-width="80">
+                    Action
+                </th>
+
+
+
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Items != null)
+            {
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>
+                            @item.Source
+                        </td>
+                        <td>
+                            @item.ItemId
+                        </td>
+                        <td>
+                            @item.ItemNo
+                        </td>
+                        <td>
+                            @item.ItemDescription
+                        </td>
+                        <td>
+                            @item.ItemEnglishName
+                        </td>
+                        <td>
+                            @item.Level3
+                        </td>
+                        <td>@item.SpendArea</td>
+                        <td>
+                            @item.AddressableSpend
+                        </td>
+                        <td>
+                            @item.CurrentWavePlan
+                        </td>
+                        <td>
+                            <span class="@(item.UpdateStatus=="PendingApproval" ? "badge rounded-pill alert-warning" :
+                    item.UpdateStatus=="Approved" ? "badge rounded-pill alert-success" :
+                     item.UpdateStatus=="UpdateDirectly" ? "badge rounded-pill alert-info" :
+                    item.UpdateStatus=="Rejected" ? "badge rounded-pill alert-danger" : string.Empty)">
+                                @item.UpdateStatus
+                            </span>
+
+                        </td>
+                        <td>@(item.UpdatedDate?.ToString("dd-MM-yyyy HH:mm:ss"))</td>
+
+                        <td>
+                            @item.CasNumber
+                        </td>
+                        <td>
+                            @item.ItemForm
+                        </td>
+                        <td>
+                            @item.MaterialCriticalityBasedOnRevenue
+                        </td>
+                        <td>
+                            @if (item.UpdateStatus != "PendingApproval")
+                            {
+                                <a asp-action="Edit" title="Edit" data-toggle="tooltip" asp-route-id="@item.ItemId" asp-route-ItemNo="@item.ItemNo"
+                                   asp-route-ItemDescription="@item.ItemDescription" asp-route-Source="@item.Source"
+                                   asp-route-SpendArea="@item.SpendArea" onclick="showloader()" class="btn btn-warning bi-pencil-square text-black"></a>
+
+                            }
+
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+
+    <div class="row row-cols-2 pt-3">
+        <div>
+            Showing @Model.toPageNumber to @Model.fromPageNumber of @Model.TotalCount rows
+            <select id="pageSize" name="pageSize" style="width:70px">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+        </div>
+        <nav aria-label="Page navigation ">
+            <div class="pagination float-end"></div>
+        </nav>
+    </div>
+
+
+</div>
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+}
+<script>
+    @functions {
+        public bool GetColumn(string name, string selectedPageColumns)
+        {
+            string value = name;
+            if (!string.IsNullOrEmpty(selectedPageColumns) && selectedPageColumns.Contains(name))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+    function Sorter(a) {
+        debugger
+        alert(JSON.stringify($table.bootstrapTable('getVisibleColumns').map(function (it) {
+            return it.field
+        })))
+        // var aa= JSON.stringify($("#table").bootstrapTable('getVisibleColumns').map(function (it) {
+       //      return it.field
+       //  }))
+       //  alert(aa);
+       // var url = '@Url.Action("Index", "ItemRefAttrs")' + '?pageNumber=' + '@Model.pageNumber' + '&pageSize=' + '@Model.pageSize' + '&filterColumnName=' + 'Source' + '&filterValue=' + $('#filterValue').val() + '&statusValue=' + $('select[id=statusValue]').val(); // Change to your desired URL window.open(url, '_blank');
+        window.location.href = url;
+    }
+    // $('#table').bootstrapTable({
+    //     onEventName: function (arg1, arg2) {
+    //         console.log(onEventName);
+    //     }
+    // })
+
+
+    $("#form-id").on("submit", function () {
+        $("#divLoading").show();
+    });
+    $("#divLoading").hide();
+    $('#filterType').val("@Model.filterColumnName");
+    $('#filterValue').val("@Model.filterValue");
+    $('#pageSize').val(@Model.pageSize);
+
+    $("#pageSize").change(function () {
+        $("#divLoading").show();
+        var pageSize = $('select[id=pageSize]').val();
+        var selectedPageColumns = JSON.stringify($("#table").bootstrapTable('getVisibleColumns').map(function (it) {
+            return it.title.trim();
+        }))
+        var url = '@Url.Action("Index", "ItemRefAttrs")' + '?pageNumber=' + 1 + '&pageSize=' + pageSize + '&filterColumnName=' + '@Model.filterColumnName' + '&filterValue=' + '@Model.filterValue' + '&selectedPageColumns=' + selectedPageColumns; // Change to your desired URL window.open(url, '_blank');
+        window.location.href = url;
+    })
+
+    function searchClick() {
+        $("#divLoading").show();
+        var pageSize = $('select[id=pageSize]').val();
+        var selectedPageColumns = JSON.stringify($("#table").bootstrapTable('getVisibleColumns').map(function (it) {
+            return it.title.trim();
+        }))
+        var url = '@Url.Action("Search", "ItemRefAttrs")' + '?pageNumber=' + 1 + '&pageSize=' + '@Model.pageSize' + '&filterColumnName=' + $('select[name=filterType]').val() + '&filterValue=' + $('#filterValue').val() + '&statusValue=' + $('select[id=statusValue]').val() + '&selectedPageColumns=' + selectedPageColumns; // Change to your desired URL window.open(url, '_blank');
+        window.location.href = url;
+    }
+    // init bootpag
+
+    $('.pagination').bootpag({
+        total: @Model.totalPages,
+        page: @Model.pageNumber,
+        maxVisible: 10,
+        leaps: true,
+        firstLastUse: true,
+        first: '←',
+        last: '→',
+        wrapClass: 'pagination',
+        activeClass: 'active',
+        disabledClass: 'disabled',
+        nextClass: 'next',
+        prevClass: 'prev',
+        lastClass: 'last',
+        firstClass: 'first'
+    }).on("page", function (event, num) {
+        $("#divLoading").show();
+        var selectedPageColumns = JSON.stringify($("#table").bootstrapTable('getVisibleColumns').map(function (it) {
+            return it.title.trim();
+        }))
+        var url = '@Url.Action("Index", "ItemRefAttrs")' + '?pageNumber=' + num + '&pageSize=' + '@Model.pageSize' + '&filterColumnName=' + '@Model.filterColumnName' + '&filterValue=' + '@Model.filterValue' + '&selectedPageColumns=' + selectedPageColumns; // Change to your desired URL window.open(url, '_blank');
+        window.location.href = url;
+
+    });
+
+    $("#statusValue").hide();
+
+    $("#filterType").change(function () {
+        var filterType = $('select[name=filterType]').val()
+        if (filterType == "UpdateStatus") {
+            $("#filterValue").hide();
+            $("#filterValue").val("");
+            $("#statusValue").show();
+        } else {
+            $("#filterValue").show();
+            $("#statusValue").hide();
+        }
+    });
+  
+        function BulkUpdate() {
+            $("#divLoading").show();
+          
+        var selectedPageColumns = "";
+        var pageSize = $('select[id=pageSize]').val();
+        var searchValue1 = $('.bootstrap-table .search input').val();
+        var url = '@Url.Action("BulkUpdate", "ItemRefAttrs")' + '?pageNumber=' + '@Model.pageNumber' + '&pageSize=' + pageSize + '&filterColumnName=' + '@Model.filterColumnName' + '&filterValue=' + '@Model.filterValue' + '&selectedPageColumns=' + selectedPageColumns + '&search=' + searchValue1; // Change to your desired URL window.open(url, '_blank');
+        window.location.href = url;
+        }
+
+</script>

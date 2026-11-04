@@ -1,0 +1,453 @@
+﻿@using System.Linq
+@model dynamic
+@{
+    ViewData["Title"] = "Index";
+}
+
+<div class="pt-3">
+    @if (TempData["alertMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["alertMessage"]
+            <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
+            </button>
+        </div>
+    }
+    <h4>Item Bulk Update</h4>
+    <form method="post" asp-action="BulkUpdate">
+        <div id="toolbar">
+
+            <div class="row row-cols-4">
+                <div class="col">
+                    <select id="filterType" name="filterType" class="form-select">
+                        <option value="">Select</option>
+                        <option value="source">Source</option>
+                        <option value="item_id">Item Id</option>
+                        <option value="item_no">Item Number</option>
+                        <option value="item_description">Item Description</option>
+                        <option value="item_english_name">English Name</option>
+                        <option value="level_3">Level 3</option>
+                        <option value="spend_area">Spend Area</option>
+                        <option value="addressable_spend">Addressable Spend</option>
+                        <option value="current_wave_plan">Current Wave</option>
+
+                        <option value="UpdateStatus">Status</option>
+                        <option value="UpdatedDate">Updated Date</option>
+
+                        <option value="cas_number">Cas Number</option>
+                        <option value="item_form">Item Form</option>
+                        <option value="material_criticality_based_on_revenue">Material Criticality Based On Revenue</option>
+
+                    </select>
+                    <input name="pageNumber" value="@Model.pageNumber" style="display:none" />
+                    <input name="pageSize" value="@Model.pageSize" style="display:none" />
+                    <input name="filterColumnName" value="@Model.filterColumnName" style="display:none" />
+                </div>
+                <div class="col form-group">
+                    <input id="filterValue" name="filterValue" class="form-control" />
+                    <select id="statusValue" name="statusValue" class="form-select">
+                        <option value="">Select</option>
+                        <option value="PendingApproval">Pending Approval</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+                        <option value="UpdateDirectly">Update Directly</option>
+                        <option value="New">New</option>
+                    </select>
+
+                </div>
+                <div class="col form-group">
+                    <input value="Filter" type="button" class="btn btn-primary" onclick="searchClick()" />
+                    <a class="btn btn-primary" asp-action="BulkUpdate" onclick="showloader()">  Reset</a>
+                </div>
+                <div>
+                   <button id="Savebutton1" type="submit" class="btn btn-primary" onclick="showloader()" disabled>Save Changes</button>
+                </div>
+            </div>
+
+        </div>
+
+
+
+        <table class="table table-bordered" id="table"
+               data-toggle="table"
+               data-toolbar="#toolbar"
+               data-show-columns-search="true"
+               data-sort-name="name"
+               data-sort-order="desc"
+               data-show-columns="true"
+               data-buttons-align="right"
+               data-search="true"
+               data-show-fullscreen="true"
+               data-page-size="10"
+               data-page-number="1"
+               data-resizable="true">
+            <thead class="tb-header">
+                <tr>
+                    <th data-switchable="false">
+                        <input type="checkbox" id="select_all" class="select_all" onchange="toggleCheckboxes()" />
+                    </th>
+                    <th data-sortable="true">
+                        Source
+                    </th>
+                    <th data-sortable="true" @(Model.filterColumnName == "item_id" ? "" : (GetColumn("Item Id", Model.selectedPageColumns) ? "" : "data-visible=false"))>
+                        Item Id
+                    </th>
+                    <th data-sortable="true">
+                        Item Number
+                    </th>
+                    <th data-sortable="true">
+                        Item Description
+                    </th>
+                    <th data-sortable="true" data-switchable="false">
+                        English Name
+                    </th>
+                    <th data-sortable="true" data-switchable="false">
+                        Level3
+                    </th>
+                    <th data-sortable="true" @(Model.filterColumnName == "spend_area" ? "" : (GetColumn("Spend Area", Model.selectedPageColumns) ? "" : "data-visible=false"))>
+                            Spend Area
+                    </th>
+                    <th data-sortable="true" data-switchable="false">
+                        Addressable Spend
+                    </th>
+                    <th data-sortable="true" data-switchable="false">
+                        Current Wave
+                    </th>
+                    <th data-sortable="true" data-switchable="false">
+                        Cas Number
+                    </th>
+                    <th data-sortable="true" data-switchable="false">
+                        Item Form
+                    </th>
+                    <th data-sortable="true" data-switchable="false">
+                        Material Criticality
+                    </th>
+                    <th data-sortable="true" @(Model.filterColumnName == "UpdateStatus" ? "" : (GetColumn("Status", Model.selectedPageColumns) ? "" : "data-visible=false"))>
+                        Status
+                    </th>
+                    <th data-sortable="true" @(Model.filterColumnName == "UpdatedDate" ? "" : (GetColumn("Updated Date", Model.selectedPageColumns) ? "" : "data-visible=false"))>
+                        Updated Date
+                    </th>
+
+
+
+                </tr>
+            </thead>
+            <tbody>
+
+                @if (Model != null && Model.Items != null)
+                {
+                    for (int i = 0; i < Model.Items.Count; i++)
+                    {
+                        var item = Model.Items[i];
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="toggleCheckbox" onchange="onCheckEvent()" name="Items[@i].IsSelected" value="true" @(item.IsSelected ? "checked" : "") />
+                                <input style="display:none" id="txt_edit_ItemId_" value="@item.ItemId" name="Items[@i].ItemId" readonly />
+
+                            </td>
+                            <td>
+                                <input id="txt_edit_Source" value="@item.Source" title="@item.Source" name="Items[@i].Source" class="form-control" readonly />
+
+                            </td>
+                            <td>
+                                <input id="txt_edit_ItemId" value="@item.ItemId" title="@item.ItemId" name="Items[@i].ItemId" class="form-control" readonly />
+
+                            </td>
+                            <td>
+                                <input id="txt_edit_ItemNo" value="@item.ItemNo" title="@item.ItemNo" name="Items[@i].ItemNo" class="form-control" readonly />
+
+                            </td>
+                            <td>
+                                <input id="txt_edit_ItemDescription" value="@item.ItemDescription" title="@item.ItemDescription" name="Items[@i].ItemDescription" class="form-control" readonly />
+                            </td>
+                            <td>
+                                <input id="txt_edit_ItemEnglishName" value="@item.ItemEnglishName" title="@item.ItemEnglishName" name="Items[@i].ItemEnglishName" class="form-control" />
+
+                            </td>
+                            <td>
+                                @*  <input id="txt_edit_Level3" value="@item.Level3" name="Items[@i].Level3" class="form-control" /> *@
+                                <select id="txt_edit_lst_Level" name="Items[@i].Level3" class="form-select" title="@item.Level3">
+                                    @Html.Raw(GetSelectLevelOptions(@item.Level3, @ViewBag.lstLevel3)))
+                                </select>
+                            </td>
+                            <td>
+                                <input id="txt_edit_SpendArea" value="@item.SpendArea" title="@item.SpendArea" name="Items[@i].SpendArea" class="form-control" readonly />
+
+                            </td>
+                            <td>
+                                @* <input id="txt_edit_AddressableSpend" value="@item.AddressableSpend" name="Items[@i].AddressableSpend" class="form-control" /> *@
+                                <select id="txt_edit_AddressableSpend" name="Items[@i].AddressableSpend" class="form-select" title="@item.AddressableSpend">
+                                    @Html.Raw(GetSelectOptions(@item.AddressableSpend))
+                                </select>
+                            </td>
+
+                            <td>
+                                @* <input id="txt_edit_CurrentWavePlan" value="@item.CurrentWavePlan" name="Items[@i].CurrentWavePlan" class="form-control" /> *@
+                                <select id="txt_edit_CurrentWavePlan" name="Items[@i].CurrentWavePlan" class="form-select" title="@item.CurrentWavePlan">
+                                    @Html.Raw(GetSelectOptions(@item.CurrentWavePlan))
+                                </select>
+                            </td>
+
+                            <td>
+                                <input id="txt_edit_CasNumber" value="@item.CasNumber" name="Items[@i].CasNumber" class="form-control" title="@item.CasNumber" />
+
+                            </td>
+                            <td>
+
+                                <select id="txt_edit_ItemForm" name="Items[@i].ItemForm" class="form-select" title="@item.ItemForm">
+                                    @Html.Raw(GetSelectOptionsItemForm(@item.ItemForm))
+                                </select>
+
+                            </td>
+                            <td>
+
+                                <select id="txt_edit_MaterialCriticalityBasedOnRevenue" name="Items[@i].MaterialCriticalityBasedOnRevenue" title="@item.MaterialCriticalityBasedOnRevenue" class="form-select">
+                                    @Html.Raw(GetSelectOptionsMCBOR(@item.MaterialCriticalityBasedOnRevenue))
+                                </select>
+
+                            </td>
+                            <td>
+                                <span class="@(item.UpdateStatus=="PendingApproval" ? "badge rounded-pill alert-warning" :
+                                     item.UpdateStatus=="Approved" ? "badge rounded-pill alert-success" :
+                                      item.UpdateStatus=="UpdateDirectly" ? "badge rounded-pill alert-info" :
+                                     item.UpdateStatus=="Rejected" ? "badge rounded-pill alert-danger" : string.Empty)">
+                                    @item.UpdateStatus
+                                </span>
+                            </td>
+                            <td>
+                                @(item.UpdatedDate?.ToString("dd-MM-yyyy HH:mm:ss"))
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="9" class="text-center">No Item found.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="row row-cols-2 pt-3">
+            <div>
+                Showing @Model.toPageNumber to @Model.fromPageNumber of @Model.TotalCount rows
+                <select id="pageSize" name="pageSize" style="width:70px">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+            <nav aria-label="Page navigation ">
+                <div class="pagination float-end"></div>
+            </nav>
+        </div>
+        <div class="d-flex justify-content-between pt-3">
+            <div>
+            </div>
+            <button id="Savebutton" type="submit" class="btn btn-primary" onclick="showloader()" disabled>Save Changes</button>
+        </div>
+
+    </form>
+</div>
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+}
+<script>
+
+
+    @functions {
+        public bool GetColumn(string name, string selectedPageColumns)
+        {
+            string value = name;
+            if (!string.IsNullOrEmpty(selectedPageColumns) && selectedPageColumns.Contains(name))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        public static string GetSelectOptions(string selectedValue)
+        {
+            var options = new List<string>
+        {
+        "<option value=\"\">Select</option>",
+        "<option value=\"Yes\">Yes</option>",
+        "<option value=\"No\">No</option>"
+        };
+            for (int i = 0; i < options.Count; i++)
+            {
+                if (options[i].Contains($"value=\"{selectedValue}\""))
+                {
+                    options[i] = options[i].Replace(">", " selected>");
+                }
+            }
+            return string.Join("\n", options);
+        }
+
+        public static string GetSelectOptionsMCBOR(string selectedValue)
+        {
+            var options = new List<string>
+        {
+        "<option value=\"\">Select</option>",
+        "<option value=\"High\">High</option>",
+        "<option value=\"Medium\">Medium</option>",
+        "<option value=\"Low\">Low</option>"
+        };
+            for (int i = 0; i < options.Count; i++)
+            {
+                if (options[i].Contains($"value=\"{selectedValue}\""))
+                {
+                    options[i] = options[i].Replace(">", " selected>");
+                }
+            }
+            return string.Join("\n", options);
+        }
+        public static string GetSelectOptionsItemForm(string selectedValue)
+        {
+            var options = new List<string>
+        {
+        "<option value=\"\">Select</option>",
+        "<option value=\"Flake\">Flake</option>",
+        "<option value=\"Liquid\">Liquid</option>",
+           "<option value=\"Molten\">Molten</option>",
+        "<option value=\"Pellet\">Pellet</option>",
+        "<option value=\"Powder\">Powder</option>",
+        "<option value=\"Solid\">Solid</option>"
+
+        };
+            for (int i = 0; i < options.Count; i++)
+            {
+                if (options[i].Contains($"value=\"{selectedValue}\""))
+                {
+                    options[i] = options[i].Replace(">", " selected>");
+                }
+            }
+            return string.Join("\n", options);
+        }
+        public static string GetSelectLevelOptions(string selectedValue, List<string> list)
+        {
+            var options = new List<string>();
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                string value = list[i];
+                if (value == selectedValue)
+                {
+                    options.Add($"<option value=\"{value}\" selected>{value}</option>");
+                }
+                else
+                {
+                    options.Add($"<option value=\"{value}\">{value}</option>");
+                }
+            }
+
+            return string.Join("\n", options);
+        }
+    }
+
+        $("#divLoading").hide();
+    $('#filterType').val("@Model.filterColumnName");
+    $('#filterValue').val("@Model.filterValue");
+    $('#pageSize').val(@Model.pageSize);
+    $("#pageSize").change(function () {
+        $("#divLoading").show();
+        var pageSize = $('select[id=pageSize]').val();
+        var selectedPageColumns = JSON.stringify($("#table").bootstrapTable('getVisibleColumns').map(function (it) {
+            return it.title.trim();
+        }))
+        var url = '@Url.Action("BulkUpdate", "ItemRefAttrs")' + '?pageNumber=' + 1 + '&pageSize=' + pageSize + '&filterColumnName=' + '@Model.filterColumnName' + '&filterValue=' + '@Model.filterValue' + '&selectedPageColumns=' + selectedPageColumns; // Change to your desired URL window.open(url, '_blank');
+        window.location.href = url;
+    })
+
+    function searchClick() {
+        $("#divLoading").show();
+        var pageSize = $('select[id=pageSize]').val();
+        var selectedPageColumns = JSON.stringify($("#table").bootstrapTable('getVisibleColumns').map(function (it) {
+            return it.title.trim();
+        }))
+        var url = '@Url.Action("BulkUpdateSearch", "ItemRefAttrs")' + '?pageNumber=' + '@Model.pageNumber' + '&pageSize=' + 1 + '&filterColumnName=' + $('select[name=filterType]').val() + '&filterValue=' + $('#filterValue').val() + '&statusValue=' + $('select[id=statusValue]').val() + '&formula=' + $('select[id=formula]').val() + '&selectedPageColumns=' + selectedPageColumns; // Change to your desired URL window.open(url, '_blank');
+        window.location.href = url;
+    }
+     function toggleCheckboxes() {
+        const checkboxes = document.querySelectorAll('.toggleCheckbox');
+        const select_all = document.querySelectorAll('.select_all');
+        const button = document.getElementById('Savebutton');
+        const button1 = document.getElementById('Savebutton1');
+        //select_all[0].checked = !select_all[0].checked
+        //alert(select_all[0].checked, select_all[1].checked)
+        checkboxes.forEach(checkbox => {
+            if (select_all[0].checked) {
+                checkbox.checked = true;
+                button.disabled = !checkbox.checked;
+                    button1.disabled = !checkbox.checked;
+            }
+            else {
+                checkbox.checked = false;
+                button.disabled = !checkbox.checked;
+                    button1.disabled = !checkbox.checked;
+            }
+        });
+    }
+    function onCheckEvent() {
+        const button = document.getElementById('Savebutton');
+        const button1 = document.getElementById('Savebutton1');
+        button.disabled = true;
+        button1.disabled = true;
+        const checkboxes = document.querySelectorAll('.toggleCheckbox');
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked == true) {
+                button.disabled = false;
+                button1.disabled = false;
+            }
+        }
+        )
+    }
+
+    // init bootpag
+
+    $('.pagination').bootpag({
+        total: @Model.totalPages,
+        page: @Model.pageNumber,
+        maxVisible: 10,
+        leaps: true,
+        firstLastUse: true,
+        first: '←',
+        last: '→',
+        wrapClass: 'pagination',
+        activeClass: 'active',
+        disabledClass: 'disabled',
+        nextClass: 'next',
+        prevClass: 'prev',
+        lastClass: 'last',
+        firstClass: 'first'
+    }).on("page", function (event, num) {
+        var selectedPageColumns = JSON.stringify($("#table").bootstrapTable('getVisibleColumns').map(function (it) {
+            return it.title.trim();
+        }))
+        // alert(aa);
+        $("#divLoading").show();
+        var url = '@Url.Action("BulkUpdate", "ItemRefAttrs")' + '?pageNumber=' + num + '&pageSize=' + '@Model.pageSize' + '&filterColumnName=' + '@Model.filterColumnName' + '&filterValue=' + '@Model.filterValue' + '&selectedPageColumns=' + selectedPageColumns; // Change to your desired URL window.open(url, '_blank');
+        window.location.href = url;
+
+    });
+
+    $("#statusValue").hide();
+
+    $("#filterType").change(function () {
+        var filterType = $('select[name=filterType]').val()
+        if (filterType == "UpdateStatus") {
+            $("#filterValue").hide();
+            $("#filterValue").val("");
+            $("#statusValue").show();
+        } else {
+            $("#filterValue").show();
+            $("#statusValue").hide();
+        }
+    });
+
+</script>

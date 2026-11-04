@@ -1,0 +1,183 @@
+﻿@model IEnumerable<AOC_MDM.Services.DTO.MDMSpendAreaDTO>
+
+@{
+    ViewData["Title"] = "Index";
+}
+<form method="post" asp-action="BulkUpdate">
+    <div class="pt-3">
+        <h4>
+            Spend Area Bulk Update
+        </h4>
+        <div id="toolbar" style="width:220px">
+             <div class="row row-cols-2">
+                  <div class="col">
+
+            <button id="Savebutton" type="submit" class="btn btn-primary" onclick="showloader()" disabled>Save Changes</button>
+            </div>
+                <div class="col">
+             <a class="btn btn-primary" asp-action="BulkUpdate" onclick="showloader()">  Reset</a>
+             </div>
+              
+
+            </div>
+
+        </div>
+        @if (TempData["alertMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["alertMessage"]
+                <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
+                </button>
+            </div>
+        }
+        <table class="table table-bordered" id="table"
+               data-toggle="table"
+               data-page-size="25"
+               data-page-number="1"
+               data-toolbar="#toolbar"
+               data-show-columns-search="true"
+               data-sort-name="name"
+               data-sort-order="desc"              
+               data-buttons-align="right"
+               data-search="true"
+               data-show-fullscreen="true"
+               data-pagination="true"
+               data-resizable="true">
+            <thead class="tb-header">
+
+                <tr>
+                    <th data-switchable="false">
+                        <input type="checkbox" id="select_all" class="select_all" onchange="toggleCheckboxes()" />
+                    </th>
+                     <th data-sortable="true" data-switchable="false">
+                     Spend Area
+                </th>
+                    <th data-sortable="true" data-switchable="false">
+                        @Html.DisplayNameFor(model => model.Enabled)
+                    </th>
+               
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model != null)
+                {
+                    var modelList = Model.ToList();
+                    for (int i = 0; i < modelList.Count; i++)
+                    {
+                        var item = modelList[i];
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="toggleCheckbox" onchange="onCheckEvent()" name="Items[@i].IsSelected"  value="true" @(item.IsSelected ? "checked" : "") />
+
+                            </td>
+                            <td>
+                                <input id="txt_edit_spend_area_" value="@item.spend_area" title="@item.spend_area" readonly  name="Items[@i].spend_area" class="form-control" />
+
+                            </td>
+
+                            <td>
+                                <select id="txt_edit_Enabled" name="Items[@i].Enabled" class="form-select">
+                                    @Html.Raw(GetSelectOptions(@item.Enabled))
+                                </select>
+
+                            </td>
+
+
+
+                        </tr>
+                    }
+
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="11" class="text-center">No Record found.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="d-flex justify-content-between pt-3">
+        <div>
+            <input type="type" name="search" id="search" style="display:none" />
+        </div>
+        <button id="Savebutton1" type="submit" class="btn btn-primary" onclick="showloader()" disabled>Save Changes</button>
+    </div>
+</form>
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchParam = urlParams.get('search');
+    $("#search").val(searchParam)
+  @functions {
+        public static string GetSelectOptions(string selectedValue)
+        {
+            var options = new List<string>
+        {
+       
+        "<option value=\"Yes\">Yes</option>",
+        "<option value=\"No\">No</option>"
+        };
+            for (int i = 0; i < options.Count; i++)
+            {
+                if (options[i].Contains($"value=\"{selectedValue}\""))
+                {
+                    options[i] = options[i].Replace(">", " selected>");
+                }
+            }
+            return string.Join("\n", options);
+        }
+       
+        }
+
+    $("#divLoading").show();
+      document.addEventListener('DOMContentLoaded', function() {
+            $("#divLoading").show();
+        });
+
+        // Hide the loader and show the content once the page is fully loaded
+        window.addEventListener('load', function() {
+            $("#divLoading").hide();
+        });
+
+
+
+    function toggleCheckboxes() {
+        const checkboxes = document.querySelectorAll('.toggleCheckbox');
+        const select_all = document.querySelectorAll('.select_all');
+        const button = document.getElementById('Savebutton');
+        const button1 = document.getElementById('Savebutton1');
+        //select_all[0].checked = !select_all[0].checked
+        //alert(select_all[0].checked, select_all[1].checked)
+        checkboxes.forEach(checkbox => {
+            if (select_all[0].checked) {
+                checkbox.checked = true;
+                button.disabled = !checkbox.checked;
+                button1.disabled = !checkbox.checked;
+            }
+            else {
+                checkbox.checked = false;
+                button.disabled = !checkbox.checked;
+                button1.disabled = !checkbox.checked;
+            }
+        });
+    }
+    function onCheckEvent() {
+        const button = document.getElementById('Savebutton');
+        const button1 = document.getElementById('Savebutton1');
+        button.disabled = true;
+        button1.disabled = true;
+        const checkboxes = document.querySelectorAll('.toggleCheckbox');
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked == true) {
+                button.disabled = false;
+                button1.disabled = false;
+            }
+        }
+        )
+    }
+
+    
+</script>
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+}

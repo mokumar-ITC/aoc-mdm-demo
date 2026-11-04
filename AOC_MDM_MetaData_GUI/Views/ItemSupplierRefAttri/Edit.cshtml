@@ -1,0 +1,79 @@
+﻿@model AOC_MDM.Services.DTO.MDMViewItemSupplierRefAttrsDTO
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<div>
+    <h2>Edit</h2>
+
+    <a asp-action="Index" class="btn btn-primary float-end" onclick="showloader()">Back to List</a>
+</div>
+<h4>Item Supplier Ref Attributes</h4>
+<hr />
+
+
+<form asp-action="Edit" asp-route-id="@Model.ItemId">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="p-2 row row-cols-4">
+        <div class="form-group">
+            <label asp-for="ItemId" class="control-label">Item Id</label>
+            <input asp-for="ItemId" readonly class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="Source" class="control-label"></label>
+            <input asp-for="Source" readonly class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="VendorId" class="control-label">Vendor Id</label>
+            <input asp-for="VendorId" readonly class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="VendorName" class="control-label">Vendor Name</label>
+            <input asp-for="VendorName" readonly class="form-control" />
+        </div>
+    </div>
+    <div class="p-2 row row-cols-4">
+        <div class="form-group">
+            <label asp-for="ItemDescription" class="control-label">Item Description</label>
+            <input asp-for="ItemDescription" readonly class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="ItemNo" class="control-label">Item No</label>
+            <input asp-for="ItemNo" readonly class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="RiskTransfer" class="control-label">Risk Transfer</label>
+            <input asp-for="RiskTransfer" class="form-control" />
+        </div>
+ 
+        <div class="form-group">
+            <label asp-for="SupplierSpecificRequirements" class="control-label">Supplier Specific Requirements</label>
+            <input asp-for="SupplierSpecificRequirements" class="form-control" />
+        </div>
+    </div>
+    <div class="p-2 row row-cols-4">
+        <div class="form-group">
+            <label asp-for="FormulaNonFormula" class="control-label">Formula Non Formula</label>
+            
+            <select asp-for="FormulaNonFormula" class="form-select">
+                <option value="">Select</option>
+                <option value="Formula">Formula</option>
+                <option value="Non-Formula">Non-Formula</option>
+            </select>
+        </div>
+          <div class="form-group">
+            <label asp-for="SpendArea" class="control-label">Spend Area</label>
+            <input asp-for="SpendArea" class="form-control" />
+        </div>
+        <div class="form-group ">
+            <br />
+            <input type="submit" value="Save" onclick="showloader()" class="btn btn-primary" />
+        </div>
+    </div>
+    </form>
+
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+}

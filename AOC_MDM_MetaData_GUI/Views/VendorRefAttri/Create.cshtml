@@ -1,0 +1,87 @@
+﻿@model AOC_MDM.Services.DTO.MDMVendorRefAttriDTO
+
+@{
+    ViewData["Title"] = "Create";
+}
+<div>
+    <h2>Create</h2>
+
+
+    <a asp-action="Index" class="btn btn-primary float-end">Back to List</a>
+</div>
+<h4>Vendor Ref Attributes</h4>
+<hr />
+
+
+<form asp-action="Create">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="p-2 row row-cols-4">
+        <div class="col ">
+            <label asp-for="VendorId" class="control-label"></label>
+            <input asp-for="VendorId" class="form-control" />
+            <span asp-validation-for="VendorId" class="text-danger"></span>
+        </div>
+        <div class="col ">
+            <label asp-for="SupplierVendor" class="control-label"></label>
+            <input asp-for="SupplierVendor" class="form-control" />
+            <span asp-validation-for="SupplierVendor" class="text-danger"></span>
+        </div>
+        <div class="col ">
+            <label asp-for="VendorEnglishName" class="control-label"></label>
+            <input asp-for="VendorEnglishName" class="form-control" />
+            <span asp-validation-for="VendorEnglishName" class="text-danger"></span>
+        </div>
+        <div class="col ">
+            <label asp-for="VendorFamilyName" class="control-label"></label>
+            <input asp-for="VendorFamilyName" class="form-control" />
+            <span asp-validation-for="VendorFamilyName" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="p-2 row row-cols-4">
+        <div class="col ">
+            <label asp-for="Level3" class="control-label"></label>
+            <input asp-for="Level3" class="form-control" />
+            <span asp-validation-for="Level3" class="text-danger"></span>
+        </div>
+        <div class="col ">
+            <label asp-for="ParentCompany" class="control-label"></label>
+            <input asp-for="ParentCompany" class="form-control" />
+            <span asp-validation-for="ParentCompany" class="text-danger"></span>
+        </div>
+        <div class="col ">
+            <label asp-for="AddressableSpend" class="control-label"></label>
+            <input asp-for="AddressableSpend" class="form-control" />
+            <span asp-validation-for="AddressableSpend" class="text-danger"></span>
+        </div>
+        <div class="col ">
+            <label asp-for="PayablesVeryImportantSupplier" class="control-label"></label>
+            <input asp-for="PayablesVeryImportantSupplier" class="form-control" />
+            <span asp-validation-for="PayablesVeryImportantSupplier" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="p-2 row row-cols-4">
+        <div class="col ">
+            <label asp-for="Intercompany" class="control-label"></label>
+            <input asp-for="Intercompany" class="form-control" />
+            <span asp-validation-for="Intercompany" class="text-danger"></span>
+        </div>
+        <div class="col ">
+            <label asp-for="IndirectSpendOwner" class="control-label"></label>
+            <input asp-for="IndirectSpendOwner" class="form-control" />
+            <span asp-validation-for="IndirectSpendOwner" class="text-danger"></span>
+        </div>
+        <div class="col ">
+            <br />
+            <input type="submit" value="Create" class="btn btn-primary" />
+        </div>
+    </div>
+</form>
+
+
+
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

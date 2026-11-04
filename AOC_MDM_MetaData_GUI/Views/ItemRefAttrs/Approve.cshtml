@@ -1,0 +1,86 @@
+﻿ @model dynamic
+@{
+    ViewData["Title"] = "Approve";
+}
+
+
+<div class="row row-cols-1">
+   <h2>Approve</h2>
+    <div class="row row-cols-2">
+        <div>
+            <h4>Item Ref Attributes</h4>
+        </div><div>
+            <a class="btn btn-primary float-end cols-2" asp-action="ItemAudit" onclick="showloader()">Back to List</a>
+        </div>
+    </div>
+  
+</div>
+<div class="row row-cols-3 p-2">
+
+    <ul class="list-group p-0">
+        <li class="list-group-item tb-header">Header</li>
+        <li class="list-group-item height-lst"><label class="control-label">Source</label></li>
+        <li class="list-group-item height-lst"><label class="control-label">Item Id</label></li>
+        <li class="list-group-item height-lst"><label class="control-label">Item English Name</label> </li>
+        <li class="list-group-item height-lst"><label class="control-label">Cas Number</label></li>
+        <li class="list-group-item height-lst"><label class="control-label">Item Form</label></li>
+        <li class="list-group-item height-lst"><label class="control-label">Level3</label></li>
+        <li class="list-group-item height-lst"><label class="control-label">Addressable Spend</label></li>
+        <li class="list-group-item height-lst"><label class="control-label">Material Criticality Based On Revenue</label></li>
+        <li class="list-group-item height-lst"><label class="control-label">Current Wave Plan</label></li>
+       
+    </ul>
+
+    <ul class="list-group p-0">
+        <li class="list-group-item tb-header">Original Data </li>
+        <li class="@(Model.MainTable.Source != Model.AuditTable.Source ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.Source</li>
+        <li class="@(Model.MainTable.ItemId != Model.AuditTable.ItemId ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.ItemId</li>
+        <li class="@(Model.MainTable.ItemEnglishName != Model.AuditTable.ItemEnglishName ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.ItemEnglishName</li>
+        <li class="@(Model.MainTable.CasNumber != Model.AuditTable.CasNumber ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.CasNumber</li>
+        <li class="@(Model.MainTable.ItemForm != Model.AuditTable.ItemForm ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.ItemForm</li>
+        <li class="@(Model.MainTable.Level3 != Model.AuditTable.Level3 ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.Level3</li>
+        <li class="@(Model.MainTable.AddressableSpend != Model.AuditTable.AddressableSpend ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.AddressableSpend</li>
+        <li class="@(Model.MainTable.MaterialCriticalityBasedOnRevenue != Model.AuditTable.MaterialCriticalityBasedOnRevenue ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.MaterialCriticalityBasedOnRevenue</li>
+        <li class="@(Model.MainTable.CurrentWavePlan != Model.AuditTable.CurrentWavePlan ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.CurrentWavePlan</li>
+      
+    </ul>
+
+    <ul class="list-group p-0">
+
+        <li class="list-group-item tb-header">Modified Data</li>
+
+        <li class="@(Model.MainTable.Source != Model.AuditTable.Source ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.Source</li>
+        <li class="@(Model.MainTable.ItemId != Model.AuditTable.ItemId ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.ItemId</li>
+        <li class="@(Model.MainTable.ItemEnglishName != Model.AuditTable.ItemEnglishName ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.ItemEnglishName</li>
+        <li class="@(Model.MainTable.CasNumber != Model.AuditTable.CasNumber ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.CasNumber</li>
+        <li class="@(Model.MainTable.ItemForm != Model.AuditTable.ItemForm ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.ItemForm</li>
+        <li class="@(Model.MainTable.Level3 != Model.AuditTable.Level3 ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.Level3</li>
+        <li class="@(Model.MainTable.AddressableSpend != Model.AuditTable.AddressableSpend ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.AddressableSpend</li>
+        <li class="@(Model.MainTable.MaterialCriticalityBasedOnRevenue != Model.AuditTable.MaterialCriticalityBasedOnRevenue ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.MaterialCriticalityBasedOnRevenue</li>
+        <li class="@(Model.MainTable.CurrentWavePlan != Model.AuditTable.CurrentWavePlan ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.CurrentWavePlan</li>
+
+    </ul>
+
+</div>
+<form asp-action="Reject">
+
+    <div class="row row-cols-4 pb-2">
+        <input style="display:none" name="auditId" value="@Model.AuditTable.AuditId" />
+        <div class="col-9" style="margin-left: -4px;">
+            <textarea class="form-control" rows="3" name="Remarks" id="Remarks" placeholder="review comment (required to reject)" required></textarea>
+            
+        </div>
+        <div class="col-3 p-4">
+            <input type="submit" value="Reject" class="btn btn-primary" />
+
+            <button type="submit" formaction="@Url.Action("Approved", new { id = Model.AuditTable.AuditId })" formnovalidate
+                    class="btn btn-success text-white"
+                    onclick="return confirm('Do you really want to Approve this Item?')">Approve</button>
+        </div>
+    </div>
+</form>
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+    await Html.RenderPartialAsync("_ValidationScriptsPartial");
+
+}

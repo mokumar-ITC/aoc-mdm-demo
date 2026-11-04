@@ -1,0 +1,166 @@
+﻿@model AOC_MDM.Services.DTO.MDMViewVendorRefAttrsDTO
+@{
+    ViewData["Title"] = "Edit";
+}
+<div>
+    <h2>Edit</h2>
+
+    <a asp-action="Index" onclick="showloader()" class="btn btn-primary float-end">Back to List</a>
+</div>
+<h4>Vendor Ref Attributes</h4>
+<hr />
+
+<form asp-action="Edit" asp-route-id="@Model.VendorId" >
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="p-2 row row-cols-4">
+        <div class="col form-group">
+            <label asp-for="VendorId" class="control-label">Vendor Id</label>
+            <input asp-for="VendorId" readonly class="form-control" />
+            <span asp-validation-for="VendorId" class="text-danger"></span>
+        </div>
+        <div class="col form-group">
+            <label asp-for="Source" class="control-label"></label>
+            <input asp-for="Source" readonly class="form-control" />
+            <span asp-validation-for="Source" class="text-danger"></span>
+        </div>
+        <div class="col form-group">
+            <label asp-for="VendorName" class="control-label">Vendor Name</label>
+            <input asp-for="VendorName" readonly class="form-control" />
+        </div>
+        <div class="col form-group">
+            <label asp-for="VendorNumber" class="control-label">Vendor Number</label>
+            <input asp-for="VendorNumber" readonly class="form-control" />        </div>
+    </div>
+    <div class="p-2 row row-cols-4">
+        <div class="col form-group">
+            <label asp-for="SupplierVendor" class="control-label">Supplier Vendor</label>
+            <input asp-for="SupplierVendor" class="form-control" list="list-SupplierVendor" />
+            <datalist id="list-SupplierVendor">
+                @if (ViewBag.SupplierVendor != null)
+                {
+                    foreach (var vendor in ViewBag.SupplierVendor)
+                    {
+                        <option>@vendor</option>
+                    }
+                }
+            </datalist>
+
+
+        </div>
+        <div class="col form-group">
+            <label asp-for="VendorEnglishName" class="control-label">Vendor English Name</label>
+            <input asp-for="VendorEnglishName" class="form-control" list="list-VendorEnglishName" />
+            <datalist id="list-VendorEnglishName">
+                @if (ViewBag.VendorEnglishName != null)
+                {
+                    foreach (var vendor in ViewBag.VendorEnglishName)
+                    {
+                        <option>@vendor</option>
+                    }
+                }
+            </datalist>
+
+        </div>
+
+        <div class="col form-group">
+            <label asp-for="VendorFamilyName" class="control-label">Vendor Family Name</label>
+            <input asp-for="VendorFamilyName" class="form-control" list="list-VendorFamilyName" />
+            <datalist id="list-VendorFamilyName">
+                @if (ViewBag.VendorFamilyName != null)
+                {
+                    foreach (var vendor in ViewBag.VendorFamilyName)
+                    {
+                        <option>@vendor</option>
+                    }
+                }
+            </datalist>
+
+        </div>
+
+        <div class="col form-group">
+            <label asp-for="Level3" class="control-label"></label>
+            <select asp-items="@(new SelectList(ViewBag.lstLevel3))" asp-for="Level3" data-live-search="true" class="form-select form-control">
+                <option value="">NULL</option>
+            </select>
+
+
+        </div>
+    </div>
+    <div class="p-2 row row-cols-4">
+        <div class="col form-group">
+            <label asp-for="ParentCompany" class="control-label">Parent Company</label>
+            <input asp-for="ParentCompany" class="form-control" list="list-ParentCompany" />
+            <datalist id="list-ParentCompany">
+                @if (ViewBag.ParentCompany != null)
+                {
+                    foreach (var vendor in ViewBag.ParentCompany)
+                    {
+                        <option>@vendor</option>
+                    }
+                }
+            </datalist>
+
+        </div>
+        <div class="col form-group">
+            <label asp-for="AddressableSpend" class="control-label">Addressable Spend</label>
+            <select asp-for="AddressableSpend" class="form-select">
+                <option value="">Select</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+
+        </div>
+  
+        <div class="col form-group">
+            <label asp-for="PayablesVeryImportantSupplier" class="control-label">Payables Very Important Supplier</label>
+            <select asp-for="PayablesVeryImportantSupplier" name="PayablesVeryImportantSupplier" class="form-select">
+                <option value="">Select</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+
+        </div>
+
+        <div class="col form-group">
+            <label asp-for="Intercompany" class="control-label"></label>
+            <select asp-for="Intercompany" class="form-select">
+                <option value="">Select</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+
+        </div>
+    </div>
+    <div class="p-2 row row-cols-4">
+        <div class="col form-group">
+            <label asp-for="IndirectSpendOwner" class="control-label">Indirect Spend Owner</label>
+            <input asp-for="IndirectSpendOwner" class="form-control" list="list-IndirectSpendOwner" />
+            <datalist id="list-IndirectSpendOwner">
+                @if (ViewBag.IndirectSpendOwner != null)
+                {
+                    foreach (var vendor in ViewBag.IndirectSpendOwner)
+                    {
+                        <option>@vendor</option>
+                    }
+                }
+            </datalist>
+
+        </div>
+        <div class="col form-group">
+            <br />
+            <input type="submit" value="Update" class="btn btn-primary" onclick="showloader()" />
+        </div>
+    </div>
+</form>
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+}
+
+<script type="text/javascript">
+    $("#divLoading").hide();
+    $(function () {
+        $("#Level3").select2();
+    });
+
+</script>
+

@@ -1,0 +1,134 @@
+﻿@model IEnumerable<AOC_MDM.Core.Entities.MDMItemRefAttributesAudit>
+
+@{
+    ViewData["Title"] = "Item List";
+}
+
+<div>
+    @if (TempData["alertMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["alertMessage"]
+            <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
+            </button>
+        </div>
+    }
+    <div id="toolbar">
+        <h4>Item Approval</h4>
+    </div>
+
+    @* data-custom-sort="customSort" *@
+    <table class="table table-bordered" id="table"
+           data-toolbar="#toolbar"
+           data-toggle="table"
+           data-show-columns-search="true"
+           data-sort-name="name"
+           data-sort-order="desc"
+           data-show-columns="true"
+           data-buttons-align="right"
+           data-search="true"
+           data-show-fullscreen="true"
+           data-pagination="true"
+           data-resizable="true">
+        <thead class="tb-header">
+            <tr>
+                <th data-sortable="true">
+                    @Html.DisplayNameFor(model => model.Source)
+                </th>
+                <th data-sortable="true">
+                    Item Id
+                </th>
+
+                <th data-sortable="true" data-visible="false">
+                    Item English Name
+                </th>
+                <th data-sortable="true" data-visible="false">
+                    Cas Number
+
+                </th>
+                <th data-sortable="true" data-visible="false">
+                    Item Form
+                </th>
+                <th data-sortable="true" data-visible="false">
+                    Level3
+                </th>
+                <th data-sortable="true" data-visible="false">
+                    Addressable Spend
+                </th>
+                <th data-sortable="true" data-visible="false">
+                    Material Criticality)
+                </th>
+                <th data-sortable="true" data-visible="false">
+                    Current Wave Plan
+                </th>
+                <th data-sortable="true" data-visible="false">
+                    Updated Date
+                </th>
+                <th data-width="160">
+                    Action
+                </th>
+            </tr>
+
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Source)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.ItemId)
+                        </td>
+
+                        <td>
+                            @Html.DisplayFor(modelItem => item.ItemEnglishName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.CasNumber)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.ItemForm)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Level3)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.AddressableSpend)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.MaterialCriticalityBasedOnRevenue)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.CurrentWavePlan)
+                        </td>
+
+                        <td>@(item.UpdatedDate?.ToString("dd-MM-yyyy HH:mm:ss"))</td>
+                        <td>
+
+                            <a asp-action="Approve" onclick="showloader()" data-toggle="tooltip" title="Info" asp-route-id="@item.ItemId" asp-route-source="@item.Source" class="btn btn-info bi bi-info-circle text-black"></a>
+
+                            <a asp-action="Approved" title="Approved" data-toggle="tooltip" asp-route-id="@item.AuditId" class="btn btn-success bi bi-check-circle text-white"
+                               onclick="return confirm('Do you really want to Approve this Item?'); showloader()"></a>
+
+                            <a asp-action="Reject" onclick="showloader()" title="Rejected" data-toggle="tooltip" asp-route-id="@item.AuditId" class="btn btn-danger bi bi-x-circle  text-white"></a>
+
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="11" class="text-center">No Item found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+</div>
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+}

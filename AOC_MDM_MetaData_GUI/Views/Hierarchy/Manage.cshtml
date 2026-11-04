@@ -1,0 +1,97 @@
+@model AOC_MDM.Core.Entities.HierarchyImpact
+@{
+    ViewData["Title"] = "Manage " + Model.LevelLabel;
+}
+
+<div class="pt-3">
+    <div class="d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Manage @Model.LevelLabel: <span class="text-primary">@Model.Name</span></h4>
+        <a class="btn btn-primary" asp-controller="@ViewBag.ListController" asp-action="Index" onclick="showloader()">Back to List</a>
+    </div>
+    <hr />
+
+    <div class="row g-3">
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header tb-header">What is attached to "@Model.Name"</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between"><span>Status</span>
+                        <span class="badge rounded-pill @(Model.Enabled == "No" ? "alert-danger" : "alert-success")">@(Model.Enabled == "No" ? "Disabled" : "Enabled")</span></li>
+                    @if (Model.ParentLabel != null)
+                    {
+                        <li class="list-group-item d-flex justify-content-between"><span>Parent @Model.ParentLabel</span>
+                            <span>@Model.ParentName @(Model.ParentEnabled == "No" ? "(disabled)" : "")</span></li>
+                    }
+                    @if (Model.Level == "spendarea")
+                    {
+                        <li class="list-group-item d-flex justify-content-between"><span>Teams below</span><b>@Model.Teams</b></li>
+                    }
+                    @if (Model.Level is "spendarea" or "team")
+                    {
+                        <li class="list-group-item d-flex justify-content-between"><span>Level 1 below</span><b>@Model.Level1</b></li>
+                    }
+                    @if (Model.Level is "spendarea" or "team" or "level1")
+                    {
+                        <li class="list-group-item d-flex justify-content-between"><span>Level 2 below</span><b>@Model.Level2</b></li>
+                    }
+                    @if (Model.Level != "level3")
+                    {
+                        <li class="list-group-item d-flex justify-content-between"><span>Level 3 below</span><b>@Model.Level3</b></li>
+                    }
+                    <li class="list-group-item d-flex justify-content-between"><span>Vendors mapped under it</span><b>@Model.Vendors</b></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>Items mapped under it</span><b>@Model.Items</b></li>
+                    @if (Model.Level == "level3")
+                    {
+                        <li class="list-group-item d-flex justify-content-between"><span>Pending approvals using it</span><b>@Model.PendingApprovals</b></li>
+                    }
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card mb-3">
+                <div class="card-header tb-header">Rename</div>
+                <div class="card-body">
+                    <p class="small text-muted mb-2">
+                        The new name is applied everywhere at once: @Model.TotalBelow level(s) below, @Model.Vendors vendor(s)
+                        and @Model.Items item(s)@(Model.Level == "level3" ? $", plus {Model.PendingApprovals} pending approval(s)" : "").
+                        Names must be unique within a level (not case-sensitive).
+                    </p>
+                    <form asp-action="Rename" method="post" class="d-flex gap-2">
+                        <input type="hidden" name="level" value="@Model.Level" />
+                        <input type="hidden" name="id" value="@Model.Name" />
+                        <input name="newName" class="form-control" value="@Model.Name" required />
+                        <button type="submit" class="btn btn-primary text-nowrap"
+                                onclick="return confirm('Rename this @Model.LevelLabel and everything that uses it?')">Rename</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header tb-header">Delete</div>
+                <div class="card-body">
+                    @if (Model.InUse)
+                    {
+                        <p class="small mb-0 text-danger">
+                            Cannot be deleted while anything is attached to it. Move or delete the items listed on the left first,
+                            or disable it instead (disabling also disables everything below it).
+                        </p>
+                    }
+                    else
+                    {
+                        <p class="small text-muted mb-2">Nothing is attached to "@Model.Name", so it can be deleted. The deletion is recorded in the hierarchy history.</p>
+                        <form asp-action="Delete" method="post">
+                            <input type="hidden" name="level" value="@Model.Level" />
+                            <input type="hidden" name="id" value="@Model.Name" />
+                            <button type="submit" class="btn btn-danger"
+                                    onclick="return confirm('Permanently delete @Model.LevelLabel &quot;@Model.Name&quot;?')">Delete</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+}

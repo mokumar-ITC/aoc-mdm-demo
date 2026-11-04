@@ -1,0 +1,136 @@
+﻿@model IEnumerable<AOC_MDM.Core.Entities.MDMVendorRefAttributesAudit>
+
+@{
+    ViewData["Title"] = "Vendor List";
+}
+
+@* <h1>Vendor List</h1> *@
+
+<!-- Filter Form -->
+@* <form method="get" asp-action="Index">
+    <div class="form-group">
+        <label for="search">Search:</label>
+        <input type="text" name="search" id="search" class="form-control" placeholder="Search by Vendor Name" />
+    </div>
+    <button type="submit" class="btn btn-primary">Search</button>
+</form> *@
+
+<div>
+    @if (TempData["alertMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["alertMessage"]
+            <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
+            </button>
+        </div>
+    }
+  
+      <div id="toolbar">
+        <h4>Vendor Approval</h4> 
+    </div>
+    <table class="table table-bordered" id="table"
+           data-toolbar="#toolbar"
+           data-toggle="table"
+          
+           data-show-columns-search="true"
+           data-sort-name="name"
+           data-sort-order="desc"
+           data-show-columns="true"
+           data-buttons-align="right"
+           data-search="true"
+           data-show-fullscreen="true"
+           data-pagination="true"
+           data-resizable="true">
+        <thead class="tb-header">
+            <tr>
+                <th data-sortable="true">
+                    Vendor ID
+                </th>
+                <th data-sortable="true">
+                    Source
+                </th>
+                <th data-sortable="true">
+                    Supplier
+                </th>
+                <th data-sortable="true">
+                    Name
+                </th>
+                <th data-sortable="true" data-visible="false">
+                    Family
+                </th>
+                <th data-sortable="true" data-visible="false">
+                    Type
+                </th>
+                <th data-sortable="true" data-visible="false">
+                    Company
+                </th>
+                <th data-sortable="true" data-visible="false">
+                    Address
+                </th>
+                <th data-sortable="true" data-visible="false">
+                    Payables
+                </th>
+
+                <th data-sortable="true" data-visible="false">
+                    Intercompany
+                </th>
+                <th data-sortable="true" data-visible="false">
+                    Indirect
+                </th>
+                <th data-sortable="true" data-visible="false">
+                    Audit Id
+                </th>
+                <th data-sortable="true" data-visible="false">
+                    Updated Date
+                </th>
+                
+                <th data-width="160">
+                    Action
+                </th>
+            </tr>
+          
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var vendor in Model)
+                {
+                    <tr class="@(vendor.VendorId=="58" ? "alert-info" : string.Empty)">
+                        <td>@vendor.VendorId</td>
+                        <td>@vendor.Source</td>
+                        <td>@vendor.SupplierVendor</td>
+                        <td>@vendor.VendorEnglishName</td>
+                        <td>@vendor.VendorFamilyName</td>
+                        <td>@vendor.Level3</td>
+                        <td>@vendor.ParentCompany</td>
+                        <td>@vendor.AddressableSpend</td>
+                        <td>@vendor.PayablesVeryImportantSupplier</td>
+                        <td>@vendor.Intercompany</td>
+                        <td>@vendor.IndirectSpendOwner</td>
+                        <td>@vendor.AuditId</td>
+                        <td>@(vendor.UpdatedDate?.ToString("dd-MM-yyyy HH:mm:ss"))</td>
+                        <td>
+                            <a asp-action="Approve" data-toggle="tooltip" onclick="showloader()" title="Info" asp-route-id="@vendor.VendorId" asp-route-source="@vendor.Source" class="btn btn-info bi bi-info-circle text-black"></a>
+                            <a asp-action="Approved" title="Approved" data-toggle="tooltip" asp-route-id="@vendor.AuditId" class="btn btn-success bi bi-check-circle text-white"
+                               onclick="return confirm('Do you really want to Approve this Vendor?');showloader()"></a>
+
+                            <a asp-action="Reject" onclick="showloader()" title="Rejected" data-toggle="tooltip" asp-route-id="@vendor.AuditId" class="btn btn-danger bi bi-x-circle  text-white"></a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="11" class="text-center">No vendors found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+  
+   
+</div>
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+}
+

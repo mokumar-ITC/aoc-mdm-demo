@@ -1,0 +1,155 @@
+@* @model IEnumerable<AOC_MDM.Services.DTO.MDMAOCLevel2DTO> *@
+ @model dynamic
+@{
+    ViewData["Title"] = "Index";
+}
+<div class="pt-3">
+    <h4>
+        Vendor Level 2
+    </h4>
+
+    <div id="toolbar">
+        <form>
+            <div class="row row-cols-4">
+                <div class="col">
+                    <select id="filterType" name="filterType" class="form-select">
+                        <option value="">Select</option>
+                        <option value="level_2">Level2</option>
+                        <option value="level_1">Level1</option>
+                        <option value="team">Team</option>
+                        <option value="spend_area">SpendArea</option>
+                    </select>
+
+                </div>
+                <div class="col form-group">
+                    <input id="filterValue" name="filterValue" class="form-control" />
+
+                </div>
+                <div class="col form-group">
+                    <input type="button" value="Filter" class="btn btn-primary" onclick="searchClick()" />
+                    <a class="btn btn-primary" asp-action="Index" onclick="showloader()">  Reset</a>
+
+                </div>
+                <div class="col">
+                    <a class="btn btn-primary" onclick="BulkUpdate()">  BulkUpdate</a>
+                </div>
+
+            </div>
+        </form>
+    </div>
+    @if (TempData["alertMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["alertMessage"]
+            <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
+            </button>
+        </div>
+    }
+    <table class="table table-bordered" id="table"
+           data-toggle="table"
+           data-page-size="25"
+           data-page-number="1"
+           data-toolbar="#toolbar"
+           data-show-columns-search="true"
+           data-sort-name="name"
+           data-sort-order="desc"
+           data-show-columns="true"
+           data-buttons-align="right"
+           data-search="true"
+           data-show-fullscreen="true"
+           data-pagination="true"
+           data-resizable="true">
+        <thead class="tb-header">
+            <tr>
+                <th data-sortable="true">
+                    Level2
+                </th>
+                <th data-sortable="true">
+                    Level1
+                </th>
+                <th data-sortable="true">
+                    Team
+                </th>
+                <th data-sortable="true">
+                    Spend Area
+                </th>
+                <th data-sortable="true">
+                    Enabled
+                </th>
+
+                <th>
+                    Action
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Items != null)
+            {
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>
+                            @item.Level2
+                        </td>
+                        <td>
+                            @item.Level1
+                        </td>
+                        <td>
+                            @item.Team
+                        </td>
+                        <td>
+                            @item.SpendArea
+                        </td>
+
+
+                        <td>
+                            @item.Enabled
+                        </td>
+
+                        <td>
+                            <a asp-controller="Hierarchy" asp-action="Manage" asp-route-level="level2" asp-route-id="@item.Level2" title="Rename / Delete" data-toggle="tooltip" onclick="showloader()" class="btn btn-secondary bi-gear text-white"></a>
+                            <a asp-action="Edit" title="Edit" onclick="showloader()" data-toggle="tooltip" asp-route-team="@item.Team" asp-route-spendArea="@item.SpendArea" asp-route-id="@item.Level2" class="btn btn-warning bi-pencil-square text-black"></a>
+
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="11" class="text-center">No Record found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<script>
+    $('#filterType').val("@Model.filterColumnName");
+    $('#filterValue').val("@Model.filterValue");
+    function BulkUpdate() {
+        $("#divLoading").show();
+
+        var searchValue1 = $('.bootstrap-table .search input').val();
+        //var searchJson = JSON.stringify({ searchValue: searchValue1 });
+        console.log(searchValue1);
+        var selectedPageColumns = JSON.stringify($("#table").bootstrapTable('getVisibleColumns').map(function (it) {
+            return it.title.trim();
+        }))
+        var url = '@Url.Action("BulkUpdate", "AOCLevel2")' + '?filterColumnName=' + $('select[name = filterType]').val() + '&filterValue=' + $('#filterValue').val() + '&selectedPageColumns=' + selectedPageColumns + '&search=' + searchValue1; // Change to your desired URL window.open(url, '_blank');
+        window.location.href = url;
+    }
+    function searchClick() {
+        $("#divLoading").show();
+        var pageSize = $('select[id=pageSize]').val();
+        var selectedPageColumns = JSON.stringify($("#table").bootstrapTable('getVisibleColumns').map(function (it) {
+            return it.title.trim();
+        }))
+        var searchValue1 = $('.bootstrap-table .search input').val();
+        var url = '@Url.Action("Search", "AOCLevel2")' + '?filterColumnName=' + $('select[name=filterType]').val() + '&filterValue=' + $('#filterValue').val() + '&selectedPageColumns=' + selectedPageColumns + '&search=' + searchValue1; // Change to your desired URL window.open(url, '_blank');
+        window.location.href = url;
+    }
+
+</script>
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+}

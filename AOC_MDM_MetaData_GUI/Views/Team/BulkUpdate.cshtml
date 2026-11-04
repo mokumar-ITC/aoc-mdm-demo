@@ -1,0 +1,234 @@
+﻿@model dynamic
+@{
+    ViewData["Title"] = "Index";
+}
+<form method="post" asp-action="BulkUpdate">
+    <div class="pt-3">
+        <h4>
+            Team Bulk Update
+        </h4>
+        <div id="toolbar">
+
+            <div class="row row-cols-4">
+                <div class="col">
+                    <select id="filterType" name="filterColumnName" class="form-select">
+                        <option value="">Select</option>
+                        <option value="team">Team</option>
+                        <option value="spend_area">SpendArea</option>
+
+                    </select>
+
+                </div>
+                <div class="col form-group">
+                    <input id="filterValue" name="filterValue" class="form-control" />
+
+                </div>
+                <div class="col form-group">
+                    <input type="button" value="Filter" class="btn btn-primary" onclick="searchClick()" />
+                    <a class="btn btn-primary" asp-action="BulkUpdate" onclick="showloader()">  Reset</a>
+                    <input name="search" value="@Model.search" style="display:none" />
+                </div>
+                <div class="col">
+                    <button id="Savebutton" type="submit" class="btn btn-primary" onclick="showloader()" disabled>Save Changes</button>
+                </div>
+
+            </div>
+
+        </div>
+        @if (TempData["alertMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["alertMessage"]
+                <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
+                </button>
+            </div>
+        }
+        <table class="table table-bordered" id="table"
+               data-toggle="table"
+               data-page-size="25"
+               data-page-number="1"
+               data-toolbar="#toolbar"
+               data-show-columns-search="true"
+               data-sort-name="name"
+               data-sort-order="desc"
+               
+               data-buttons-align="right"
+              
+               data-show-fullscreen="true"
+               data-pagination="true"
+               data-resizable="true">
+            <thead class="tb-header">
+
+                <tr>
+                    <th data-switchable="false">
+                        <input type="checkbox" id="select_all" class="select_all" onchange="toggleCheckboxes()" />
+                    </th>
+                     <th data-sortable="true" data-switchable="false">
+                   Team
+                </th>
+                <th data-sortable="true" data-switchable="false">
+                    Spend Area
+                </th>
+                    <th data-sortable="true" data-switchable="false">
+                       Enabled
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Items != null)
+                {
+                    for (int i = 0; i < Model.Items.Count; i++)
+                    {
+                        var item = Model.Items[i];
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="toggleCheckbox" onchange="onCheckEvent()" name="Items[@i].IsSelected" value="true" @(item.IsSelected ? "checked" : "") />
+
+                            </td>
+                            <td>
+                                <input id="txt_edit_Team_" value="@item.Team" name="Items[@i].Team" title="@item.Team" class="form-control" readonly />
+
+                            </td>
+                            <td>
+                               @*  <select asp-items="@(new SelectList(ViewBag.lst_Level))" name="Items[@i].Level2" name="Items[@i].Level2" class="form-select">
+                                </select> *@
+                                <select id="txt_edit_lst_Level" name="Items[@i].SpendArea" class="form-select" title="@item.SpendArea">
+                                    @Html.Raw(GetSelectLevelOptions(@item.SpendArea, @ViewBag.lst_SpendArea)))
+                                </select>
+
+                            </td>
+
+
+                            <td>
+                                <select id="txt_edit_Enabled" name="Items[@i].Enabled" class="form-select">
+                                    @Html.Raw(GetSelectOptions(@item.Enabled))
+                                </select>
+
+                            </td>
+
+
+                        </tr>
+                    }
+
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="11" class="text-center">No Record found.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="d-flex justify-content-between pt-3">
+        <div>
+            <input type="type" name="search" id="search" style="display:none" />
+        </div>
+        <button id="Savebutton1" type="submit" class="btn btn-primary" onclick="showloader()" disabled>Save Changes</button>
+    </div>
+</form>
+<script>
+    $("#divLoading").show();
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchParam = urlParams.get('search');
+    $("#search").val(searchParam)
+    $('#filterType').val("@Model.filterColumnName");
+    $('#filterValue').val("@Model.filterValue");
+
+    
+      document.addEventListener('DOMContentLoaded', function() {
+            $("#divLoading").show();
+        });
+
+        // Hide the loader and show the content once the page is fully loaded
+    window.addEventListener('load', function () {
+        $("#divLoading").hide();
+    });
+    @functions {
+        public static string GetSelectOptions(string selectedValue)
+        {
+            var options = new List<string>
+        {       
+        "<option value=\"Yes\">Yes</option>",
+        "<option value=\"No\">No</option>"
+        };
+            for (int i = 0; i < options.Count; i++)
+            {
+                if (options[i].Contains($"value=\"{selectedValue}\""))
+                {
+                    options[i] = options[i].Replace(">", " selected>");
+                }
+            }
+            return string.Join("\n", options);
+        }
+         public static string GetSelectLevelOptions(string selectedValue, List<string> list)
+        {
+            var options = new List<string>();
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                string value = list[i];
+                if (value == selectedValue)
+                {
+                    options.Add($"<option value=\"{value}\" selected>{value}</option>");
+                }
+                else
+                {
+                    options.Add($"<option value=\"{value}\">{value}</option>");
+                }
+            }
+
+            return string.Join("\n", options);
+        }
+    }
+
+
+        function toggleCheckboxes() {
+            const checkboxes = document.querySelectorAll('.toggleCheckbox');
+            const select_all = document.querySelectorAll('.select_all');
+            const button = document.getElementById('Savebutton');
+            const button1 = document.getElementById('Savebutton1');
+            //select_all[0].checked = !select_all[0].checked
+            //alert(select_all[0].checked, select_all[1].checked)
+            checkboxes.forEach(checkbox => {
+                if (select_all[0].checked) {
+                    checkbox.checked = true;
+                    button.disabled = !checkbox.checked;
+                    button1.disabled = !checkbox.checked;
+                }
+                else {
+                    checkbox.checked = false;
+                    button.disabled = !checkbox.checked;
+                    button1.disabled = !checkbox.checked;
+                }
+            });
+        }
+    function onCheckEvent() {
+        const button = document.getElementById('Savebutton');
+        const button1 = document.getElementById('Savebutton1');
+        button.disabled = true;
+        button1.disabled = true;
+        const checkboxes = document.querySelectorAll('.toggleCheckbox');
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked == true) {
+                button.disabled = false;
+                button1.disabled = false;
+            }
+        }
+        )
+    }
+    function searchClick() {
+        $("#divLoading").show();
+        var pageSize = $('select[id=pageSize]').val();
+        var selectedPageColumns = JSON.stringify($("#table").bootstrapTable('getVisibleColumns').map(function (it) {
+            return it.title.trim();
+        }))
+        var searchValue1 = $('.bootstrap-table .search input').val();
+        var url = '@Url.Action("BulkUpdateSearch", "Team")' + '?filterColumnName=' + $('select[id=filterType]').val() + '&filterValue=' + $('#filterValue').val() + '&selectedPageColumns=' + selectedPageColumns + '&search=' + searchValue1; // Change to your desired URL window.open(url, '_blank');
+        window.location.href = url;
+    }
+    
+</script>
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+}

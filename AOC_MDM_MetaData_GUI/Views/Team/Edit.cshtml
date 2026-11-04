@@ -1,0 +1,65 @@
+﻿@model TeamViewModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+<div>
+    <h2>Edit</h2>
+
+    <a asp-action="Index" class="btn btn-primary float-end" onclick="showloader()">Back to List</a>
+</div>
+<h4>Team</h4>
+<hr />
+
+<form asp-action="Edit" asp-route-id="@Model.Team">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="p-2 row row-cols-4">
+        <div class="form-group">
+            <label asp-for="Team" class="control-label"></label>
+            <input asp-for="Team" readonly class="form-control" />
+            <span asp-validation-for="Team" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="SpendArea" class="control-label">Spend Area</label>           
+            <select asp-items="@(new SelectList(Model.lst_Team))" asp-for="SpendArea" class="form-select">
+                <option value="">NULL</option>
+            </select>
+           
+        </div>
+        <div class="form-group">
+            <label asp-for="Enabled" class="control-label"></label>
+            <select asp-for="Enabled" name="Enabled" class="form-select">
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+            <span asp-validation-for="Enabled" class="text-danger"></span>
+        </div>
+
+       
+    </div>
+    <div class="p-2 row row-cols-2">
+        <div>
+            <input asp-for="originalSpendArea" class="form-control" style="display:none" />
+            <br />
+            <br />
+            <br />@* 
+            <label class="control-label label-bold alert-success">Total number of affected records for item: @Model.TotalNoOfAffectedRecsOfItem </label><br />
+            <label class="control-label label-bold alert-success">Total number of affected records for vendor:  @Model.TotalNoOfAffectedRecsOfVendor </label> *@
+            <label class="control-label label-bold  alert-danger"><span class="alert-danger">Note-</span> If Spend Area is NULL, it indicates that it is disabled, and no changes will be applied on Spend Area.</label>
+
+        </div>
+        <div>
+            <input type="submit" value="Save" class="btn btn-primary float-end" onclick="showloader()" />
+        </div>
+    </div>
+</form>
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+}
+<script type="text/javascript">
+
+    $(function () {
+        $("#SpendArea").select2();
+    });
+
+</script>

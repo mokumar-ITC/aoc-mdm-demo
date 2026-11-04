@@ -1,0 +1,90 @@
+﻿@model AOC_MDM.Core.Entities.MDMItemRefAttributesAudit
+@{
+    ViewData["Title"] = "Reject";
+}
+
+<div>
+    <h2>Reject</h2>
+
+    <a asp-action="ItemAudit" class="btn btn-primary float-end" onclick="showloader()">Back to List</a>
+</div>
+<h4>Item Ref Attributes</h4>
+<hr />
+<form asp-action="Reject" >
+    <div asp-validation-summary="ModelOnly" class="text-danger" ></div>
+    <div class="p-2 row row-cols-4">
+        <div class="form-group">
+            <label asp-for="Source" class="control-label"></label>
+            <input asp-for="Source" readonly class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="ItemId" class="control-label">Item Id</label>
+            <input asp-for="ItemId" readonly class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="ItemEnglishName" class="control-label">Item English Name</label>
+            <input asp-for="ItemEnglishName" readonly class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="CasNumber" class="control-label">Cas Number</label>
+            <input asp-for="CasNumber" readonly class="form-control" />
+        </div>
+    </div>
+    <div class="p-2 row row-cols-4">
+        <div class="form-group">
+            <label asp-for="ItemForm" class="control-label">Item Form</label>
+            <input asp-for="ItemForm" readonly class="form-control" />
+           
+
+        </div>
+        <div class="form-group">
+            <label asp-for="Level3" class="control-label" readonly></label>
+            <input asp-for="Level3" readonly class="form-control" />
+            @* <select data-live-search="true" asp-items="@(new SelectList(ViewBag.lstLevel3))" asp-for="Level3" class="form-select form-control">
+                <option value="">NULL</option>
+            </select>
+ *@
+        </div>
+        <div class="form-group">
+            <label asp-for="AddressableSpend" class="control-label">Addressable Spend</label>
+            <input asp-for="AddressableSpend" readonly class="form-control" />
+
+
+
+        </div>
+        <div class="form-group">
+            <label asp-for="MaterialCriticalityBasedOnRevenue" class="control-label">Material Criticality Based On Revenue</label>
+            <input asp-for="MaterialCriticalityBasedOnRevenue" readonly class="form-control" />
+
+
+        </div>
+    </div>
+    <div class="p-2 row row-cols-4">
+        <div class="form-group">
+            <label asp-for="CurrentWavePlan" readonly class="control-label">Current Wave Plan</label>
+            <input asp-for="CurrentWavePlan" readonly class="form-control" />
+
+
+
+        </div>
+        <div class="col form-grou disabled">
+            <label asp-for="AuditId" class="control-label">Audit Id</label>
+            <input asp-for="AuditId" class="form-control" readonly />
+
+        </div>
+        <div class="col form-group">
+            Remark
+            <textarea class="form-control" rows="3" asp-for="Remarks" name="Remarks" id="Remarks" placeholder="review comment" required></textarea>
+            <span asp-validation-for="Remarks" class="text-danger"></span>
+        </div>
+        <div class="col form-group">
+            <br />
+            <input type="submit" value="Submit" class="btn btn-primary" />
+        </div>
+    </div>
+</form>
+
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+    // await Html.RenderPartialAsync("_ValidationScriptsPartial");
+}

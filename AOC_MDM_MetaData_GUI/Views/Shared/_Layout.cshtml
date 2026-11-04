@@ -1,0 +1,191 @@
+﻿@{
+    var userLevel = int.TryParse(User.FindFirst("LevelNo")?.Value, out var lvl) ? lvl : 4;
+    var signedIn = User.Identity?.IsAuthenticated == true;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - AOC_MDM_MetaData_GUI</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/AOC_MDM_MetaData_GUI.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/bootstrap-table.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-resizable-columns@0.2.3/dist/jquery.resizableColumns.min.css">
+
+    <style>
+        .bg-hd-cus {
+            background-color: white !important;
+            color: #0391e8 !important;
+            font-size: 18px !important;
+            font-weight: 500;
+        }
+
+            .bg-hd-cus a {
+                color: #0391e8 !important;
+                font-size: 16px;
+              
+            }
+
+                .bg-hd-cus a:link {
+                    color: #0391e8 !important;
+                    font-size: 16px;
+                }
+
+                .bg-hd-cus a:hover {
+                    background-color: white !important;
+                    font-size: 16px;
+                    color: #0391e8 !important
+                }
+    </style>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/jquery.bootpag.min.js"></script>
+</head>
+
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-hd-cus border-bottom box-shadow">
+            <div class="container-fluid">
+                <img src="~/images/itconvergence-logo.png" height="45" alt="IT Convergence" asp-append-version="true" />
+
+                <h2 class="ps-3 pe-3 mb-0 brand-title">MDM MetaData</h2>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between text-bg-dark">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item dropdown nav-box">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Hierarchy
+                            </a>
+                            <ul class="dropdown-menu bg-hd-cus">
+                                <li><a class="dropdown-item" asp-controller="SpendArea" asp-action="Index" onclick="showloader()">Spend Area</a></li>
+                                <li><a class="dropdown-item" asp-controller="Team" asp-action="Index" onclick="showloader()">Team</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" asp-controller="AOCLevel1" asp-action="Index" onclick="showloader()">Level 1</a></li>
+                                <li><a class="dropdown-item" asp-controller="AOCLevel2" asp-action="Index" onclick="showloader()">Level 2</a></li>
+                                <li><a class="dropdown-item" asp-controller="AOCLevel3" asp-action="Index" onclick="showloader()">Level 3</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" asp-controller="Hierarchy" asp-action="History" onclick="showloader()">Hierarchy History</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown nav-box">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Master Data
+                            </a>
+                            <ul class="dropdown-menu bg-hd-cus">
+                                <li><a class="dropdown-item" asp-controller="VendorRefAttri" asp-action="Index" onclick="showloader()">Vendor</a></li>
+                                <li><a class="dropdown-item" asp-controller="ItemRefAttrs" asp-action="Index" onclick="showloader()">Item</a></li>
+                                <li><a class="dropdown-item" asp-controller="ItemSupplierRefAttri" asp-action="Index" onclick="showloader()">Item Supplier</a></li>
+                                @if (userLevel >= 3)
+                                {
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><h6 class="dropdown-header">Approvals</h6></li>
+                                    <li><a class="dropdown-item" asp-controller="VendorRefAttri" asp-action="VendorAudit" onclick="showloader()">Vendor Approval</a></li>
+                                    <li><a class="dropdown-item" asp-controller="ItemRefAttrs" asp-action="ItemAudit" onclick="showloader()">Item Approval</a></li>
+                                    <li><a class="dropdown-item" asp-controller="ItemSupplierRefAttri" asp-action="ItemSupplierAudit" onclick="showloader()">Item Supplier Approval</a></li>
+                                }
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header">Unmapped Data (no Level 3)</h6></li>
+                                <li><a class="dropdown-item" asp-controller="VendorRefAttri" asp-action="Index" asp-route-pageNumber="1" asp-route-pageSize="25" asp-route-filterColumnName="level_3" asp-route-filterValue="__unmapped__" onclick="showloader()">Unmapped Vendors</a></li>
+                                <li><a class="dropdown-item" asp-controller="ItemRefAttrs" asp-action="Index" asp-route-pageNumber="1" asp-route-pageSize="25" asp-route-filterColumnName="level_3" asp-route-filterValue="__unmapped__" onclick="showloader()">Unmapped Items</a></li>
+                            </ul>
+                        </li>
+                        @if (userLevel >= 4)
+                        {
+                            <li class="nav-item dropdown nav-box">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Administration
+                                </a>
+                                <ul class="dropdown-menu bg-hd-cus">
+                                    <li><a class="dropdown-item" asp-controller="Users" asp-action="Index" onclick="showloader()">Users &amp; Access</a></li>
+                                </ul>
+                            </li>
+                        }
+                    </ul>
+                    @if (signedIn)
+                    {
+                        <div class="d-flex align-items-center gap-2 user-box">
+                            <i class="bi bi-person-circle"></i>
+                            <span>@(User.FindFirst("DisplayName")?.Value ?? User.Identity!.Name)</span>
+                            <span class="badge rounded-pill role-badge">@User.FindFirst("LevelDesc")?.Value</span>
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="mb-0">
+                                <button type="submit" class="btn btn-sm btn-outline-primary">Sign out</button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            </div>
+        </nav>
+
+
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @if (TempData["errorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                    @TempData["errorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2026 - IT Convergence MDM MetaData
+        </div>
+    </footer>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" />
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-resizable-columns@0.2.3/dist/jquery.resizableColumns.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/bootstrap-table.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/extensions/resizable/bootstrap-table-resizable.min.js"></script>
+    <script src="~/js/custom.js"></script>
+    <script src="//raw.github.com/botmonster/jquery-bootpag/master/lib/jquery.bootpag.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+    <script>
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        })
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('.select2-dropdown').length && !$(e.target).closest('.select2-selection').length) {
+                $('.form-select').select2('close');
+            }
+        });
+        // $(".navbar .nav-link").on("click", function () {
+        //     $(".navbar").find(".active").removeClass("active");
+        //     $(this).addClass("active");
+        // });
+        $(document).ready(function () {
+            var url = window.location;
+            $('.navbar .nav').find('.active').removeClass('active');
+            $('.navbar .nav li a').each(function () {
+                if (this.href == url) {
+                    $(this).parent().addClass('active');
+                }
+            });
+        });
+    </script>
+    <style>
+        .user-box { font-size: 15px; color: #002b5c; }
+        .role-badge { background: #002b5c; color: #fff; font-size: 12px; }
+        .nav-box {
+            border: 1px solid #dee2e6;
+            min-width: 150px;
+            text-align: center;
+        }
+        .active{
+            background: #e5eff7;
+        }
+    </style>
+</body>
+</html>

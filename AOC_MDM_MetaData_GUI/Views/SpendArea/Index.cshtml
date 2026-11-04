@@ -1,0 +1,106 @@
+@model IEnumerable<AOC_MDM.Services.DTO.MDMSpendAreaDTO>
+
+@{
+    ViewData["Title"] = "View";
+}
+
+<div class="pt-3">
+
+  
+       <h4>
+       Spend Area
+    </h4>
+    <div id="toolbar">
+
+        <a class="btn btn-primary" onclick="BulkUpdate()">  BulkUpdate</a>
+
+    </div>
+    @if (TempData["alertMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">           
+            @TempData["alertMessage"]
+            <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
+            </button>
+        </div>
+    }
+    @* <p>
+    <a asp-action="Create">Create New</a>
+    </p> *@
+    <table class="table table-bordered" id="table"
+           data-toggle="table"
+           data-toolbar="#toolbar"
+           data-page-size="25"
+           data-page-number="1"
+           data-show-columns-search="true"
+           data-sort-name="name"
+           data-sort-order="desc"
+           data-show-columns="true"
+           data-buttons-align="right"
+           data-search="true"
+           data-show-fullscreen="true"
+           data-pagination="true"
+           data-resizable="true">
+        <thead class="tb-header">
+            <tr>
+                <th data-sortable="true">
+                    Spend Area
+                </th>
+                <th data-sortable="true">
+                    Enabled
+                </th>
+                <th>
+                    Action
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.spend_area)
+                        </td>
+                        <td>
+
+                            @Html.DisplayFor(modelItem => (item.Enabled))
+                        </td>
+                        <td>
+
+                            @* <a asp-action="Edit" title="Edit" data-toggle="tooltip" asp-route-id="@item.spend_area" onclick="showloader()" class="btn btn-warning bi-pencil-square text-black"></a> *@
+
+                            <a asp-controller="Hierarchy" asp-action="Manage" asp-route-level="spendarea" asp-route-id="@item.spend_area" title="Rename / Delete" data-toggle="tooltip" onclick="showloader()" class="btn btn-secondary bi-gear text-white"></a>
+                            @if (item.Enabled == "Yes")
+                            {
+                                <a asp-action="Enable" title="Disable" data-toggle="tooltip" asp-route-id="@item.spend_area" class="btn btn-warning bi-eye-slash-fill text-black" onclick="return confirm('Are you sure you want to disable?');"></a>
+                            }
+                            else
+                            {
+                                <a asp-action="Enable" title="Enable" data-toggle="tooltip" asp-route-id="@item.spend_area" class="btn btn-warning bi-eye-fill text-black" onclick="return confirm('Are you sure you want to enable?');"></a>
+                            }
+                           
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="11" class="text-center">No Record found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<script>
+    function BulkUpdate() {
+        $("#divLoading").show();
+        var searchValue1 = $('.bootstrap-table .search input').val();
+        var url = '@Url.Action("BulkUpdate", "SpendArea")' + '?search=' + searchValue1; // Change to your desired URL window.open(url, '_blank');
+        window.location.href = url;
+    }
+</script>
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+}

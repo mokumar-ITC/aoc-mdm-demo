@@ -1,0 +1,132 @@
+﻿@model AOC_MDM.Services.DTO.MDMViewItemRefAttrsDTO
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<div>
+    <h2>Edit</h2>
+
+    <a asp-action="Index" class="btn btn-primary float-end" onclick="showloader()">Back to List</a>
+</div>
+<h4>Item Ref Attributes</h4>
+<hr />
+
+<form asp-action="Edit" asp-route-id="@Model.ItemId">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="p-2 row row-cols-4">
+        <div class="form-group">
+            <label asp-for="Source" class="control-label"></label>
+            <input asp-for="Source" readonly class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="ItemId" class="control-label">Item Id</label>
+            <input asp-for="ItemId" readonly class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="ItemNo" class="control-label">Item No</label>
+            <input asp-for="ItemNo" readonly class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="ItemDescription" class="control-label">Item Description</label>
+            <input asp-for="ItemDescription" readonly class="form-control" />
+        </div>
+
+    </div>
+    <div class="p-2 row row-cols-4">
+        <div class="form-group">
+            <label asp-for="ItemEnglishName" class="control-label">Item English Name</label>
+            <input asp-for="ItemEnglishName" class="form-control" list="list-ItemEnglishName" />
+            <datalist id="list-ItemEnglishName">
+                @if (ViewBag.ItemEnglishName != null)
+                {
+                    foreach (var vendor in ViewBag.ItemEnglishName)
+                    {
+                        <option>@vendor</option>
+                    }
+                }
+            </datalist>
+        </div>
+        <div class="form-group">
+            <label asp-for="CasNumber" class="control-label">Cas Number</label>
+            <input asp-for="CasNumber" class="form-control" list="list-CasNumber" />
+            <datalist id="list-CasNumber">
+                @if (ViewBag.CasNumber != null)
+                {
+                    foreach (var vendor in ViewBag.CasNumber)
+                    {
+                        <option>@vendor</option>
+                    }
+                }
+            </datalist>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="ItemForm" class="control-label">Item Form</label>
+            <select asp-for="ItemForm" class="form-select">
+                <option value="">Select</option>
+                <option value="Flake">Flake</option>
+                <option value="Liquid">Liquid</option>
+                <option value="Molten">Molten</option>
+                <option value="Pellet">Pellet</option>
+                <option value="Powder">Powder</option>
+                <option value="Solid">Solid</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label asp-for="Level3" class="control-label"></label>
+            <select data-live-search="true" asp-items="@(new SelectList(ViewBag.lstLevel3))" asp-for="Level3" class="form-select">
+                <option value="">NULL</option>
+            </select>
+
+        </div>
+    </div>
+    <div class="p-2 row row-cols-4">
+        <div class="form-group">
+            <label asp-for="AddressableSpend" class="control-label">Addressable Spend</label>
+            <select asp-for="AddressableSpend" class="form-select">
+                <option value="">Select</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+
+        </div>
+        <div class="form-group">
+            <label asp-for="MaterialCriticalityBasedOnRevenue" class="control-label">Material Criticality Based On Revenue</label>
+            <select asp-for="MaterialCriticalityBasedOnRevenue" class="form-select">
+                <option value="">Select</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="CurrentWavePlan" class="control-label">Current Wave Plan</label>
+            <select asp-for="CurrentWavePlan" class="form-select">
+                <option value="">Select</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+
+        </div>
+
+
+
+        <div class="form-group">
+            <br />
+            <input type="submit" value="Save" onclick="showloader()" class="btn btn-primary" />
+        </div>
+    </div>
+</form>
+
+<script type="text/javascript">
+
+    $(function () {
+        $("#Level3").select2();
+    });
+
+</script>
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+}

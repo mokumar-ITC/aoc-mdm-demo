@@ -1,0 +1,86 @@
+﻿ @model dynamic
+@{
+    ViewData["Title"] = "Approve";
+}
+
+
+<div class="row row-cols-1">
+    <h2>Approve</h2>
+    <div class="row row-cols-2">
+        <div>
+            <h4>Vendor Ref Attributes</h4>
+        </div><div>
+            <a class="btn btn-primary float-end cols-2" asp-action="VendorAudit" onclick="showloader()">Back to List</a>
+        </div>
+    </div>
+
+</div>
+<div class="row row-cols-3 p-2">
+
+    <ul class="list-group p-0">
+        <li class="list-group-item tb-header">Header</li>
+        <li class="list-group-item height-lst"><label class="control-label">Vendor Id</label></li>
+        <li class="list-group-item height-lst"><label class="control-label">Supplier Vendor</label></li>
+        <li class="list-group-item height-lst"><label class="control-label">Vendor English Name</label> </li>
+        <li class="list-group-item height-lst"><label class="control-label">Vendor Family Name</label></li>
+        <li class="list-group-item height-lst"><label class="control-label">Level3</label></li>
+        <li class="list-group-item height-lst"><label class="control-label">Parent Company</label></li>
+        <li class="list-group-item height-lst"><label class="control-label">Addressable Spend</label></li>
+        <li class="list-group-item height-lst"><label class="control-label">Payables Very Important Supplier</label></li>
+        <li class="list-group-item height-lst"><label class="control-label">Inter company</label></li>
+        <li class="list-group-item height-lst"><label class="control-label">Indirect SpendOwner</label></li>
+    </ul>
+
+    <ul class="list-group p-0">
+        <li class="list-group-item tb-header">Original Data </li>
+        <li class="@(Model.MainTable.VendorId != Model.AuditTable.VendorId ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.VendorId</li>
+        <li class="@(Model.MainTable.SupplierVendor != Model.AuditTable.SupplierVendor ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.SupplierVendor</li>
+        <li class="@(Model.MainTable.VendorEnglishName != Model.AuditTable.VendorEnglishName ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.VendorEnglishName</li>
+        <li class="@(Model.MainTable.VendorFamilyName != Model.AuditTable.VendorFamilyName ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.VendorFamilyName</li>
+        <li class="@(Model.MainTable.Level3 != Model.AuditTable.Level3 ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.Level3</li>
+        <li class="@(Model.MainTable.ParentCompany != Model.AuditTable.ParentCompany ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.ParentCompany</li>
+        <li class="@(Model.MainTable.AddressableSpend != Model.AuditTable.AddressableSpend ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.AddressableSpend</li>
+        <li class="@(Model.MainTable.PayablesVeryImportantSupplier != Model.AuditTable.PayablesVeryImportantSupplier ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.PayablesVeryImportantSupplier</li>
+        <li class="@(Model.MainTable.Intercompany != Model.AuditTable.Intercompany ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.Intercompany</li>
+        <li class="@(Model.MainTable.IndirectSpendOwner != Model.AuditTable.IndirectSpendOwner ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.IndirectSpendOwner</li>
+
+    </ul>
+
+    <ul class="list-group p-0">
+
+        <li class="list-group-item tb-header">Modified Data</li>
+
+        <li class="@(Model.MainTable.VendorId != Model.AuditTable.VendorId ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.VendorId</li>
+        <li class="@(Model.MainTable.SupplierVendor != Model.AuditTable.SupplierVendor ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.SupplierVendor</li>
+        <li class="@(Model.MainTable.VendorEnglishName != Model.AuditTable.VendorEnglishName ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.VendorEnglishName</li>
+        <li class="@(Model.MainTable.VendorFamilyName != Model.AuditTable.VendorFamilyName ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.VendorFamilyName</li>
+        <li class="@(Model.MainTable.Level3 != Model.AuditTable.Level3 ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.Level3</li>
+        <li class="@(Model.MainTable.ParentCompany != Model.AuditTable.ParentCompany ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.ParentCompany</li>
+        <li class="@(Model.MainTable.AddressableSpend != Model.AuditTable.AddressableSpend ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.AddressableSpend</li>
+        <li class="@(Model.MainTable.PayablesVeryImportantSupplier != Model.AuditTable.PayablesVeryImportantSupplier ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.PayablesVeryImportantSupplier</li>
+        <li class="@(Model.MainTable.Intercompany != Model.AuditTable.Intercompany ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.Intercompany</li>
+        <li class="@(Model.MainTable.IndirectSpendOwner != Model.AuditTable.IndirectSpendOwner ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.IndirectSpendOwner</li>
+
+    </ul>
+
+</div>
+<form asp-action="Reject">
+
+    <div class="row row-cols-4 pb-2">
+        <input style="display:none" name="auditId" value="@Model.AuditTable.AuditId" />
+        <div class="col-9" style="margin-left: -4px;">
+            <textarea class="form-control" rows="3" name="Remarks" id="Remarks" placeholder="review comment (required to reject)" required></textarea>
+
+        </div>
+        <div class="col-3 p-4">
+            <input type="submit" value="Reject" class="btn btn-primary" />
+
+            <button type="submit" formaction="@Url.Action("Approved", new { id = Model.AuditTable.AuditId })" formnovalidate
+                    class="btn btn-success text-white"
+                    onclick="return confirm('Do you really want to Approve this Vendor?')">Approve</button>
+        </div>
+    </div>
+</form>
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+}

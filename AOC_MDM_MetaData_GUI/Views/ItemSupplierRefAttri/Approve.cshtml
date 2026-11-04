@@ -1,0 +1,72 @@
+﻿ @model dynamic
+@{
+    ViewData["Title"] = "Approve";
+}
+
+
+<div class="row row-cols-1">
+   <h2>Approve</h2>
+    <div class="row row-cols-2">
+        <div>
+            <h4>Item Supplier Ref Attributes</h4>
+        </div><div>
+            <a class="btn btn-primary float-end cols-2" asp-action="ItemSupplierAudit" onclick="showloader()">Back to List</a>
+        </div>
+    </div>
+  
+</div>
+<div class="row row-cols-3 p-2">
+
+    <ul class="list-group p-0">
+        <li class="list-group-item tb-header">Header</li>
+        <li class="list-group-item height-lst"><label class="control-label">Source</label></li>
+        <li class="list-group-item height-lst"><label class="control-label">Item Id</label></li>
+        <li class="list-group-item height-lst"><label class="control-label">VendorId</label> </li>    
+        <li class="list-group-item height-lst"><label class="control-label">RiskTransfer</label></li>
+        <li class="list-group-item height-lst"><label class="control-label">SupplierSpecificRequirements</label></li>
+        <li class="list-group-item height-lst"><label class="control-label">FormulaNonFormula</label></li>
+       
+       
+    </ul>
+
+    <ul class="list-group p-0">
+        <li class="list-group-item tb-header">Original Data </li>
+        <li class="@(Model.MainTable.Source != Model.AuditTable.Source ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.Source</li>
+        <li class="@(Model.MainTable.ItemId != Model.AuditTable.ItemId ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.ItemId</li>
+        <li class="@(Model.MainTable.VendorId != Model.AuditTable.VendorId ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.VendorId</li>
+        <li class="@(Model.MainTable.RiskTransfer != Model.AuditTable.RiskTransfer ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.RiskTransfer</li>
+        <li class="@(Model.MainTable.SupplierSpecificRequirements != Model.AuditTable.SupplierSpecificRequirements ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.SupplierSpecificRequirements</li>
+        <li class="@(Model.MainTable.FormulaNonFormula != Model.AuditTable.FormulaNonFormula ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.MainTable.FormulaNonFormula</li>
+        
+    </ul>
+
+    <ul class="list-group p-0">
+        <li class="list-group-item tb-header">Modified Data</li>
+        <li class="@(Model.MainTable.Source != Model.AuditTable.Source ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.Source</li>
+        <li class="@(Model.MainTable.ItemId != Model.AuditTable.ItemId ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.ItemId</li>
+        <li class="@(Model.MainTable.VendorId != Model.AuditTable.VendorId ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.VendorId</li>
+        <li class="@(Model.MainTable.RiskTransfer != Model.AuditTable.RiskTransfer ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.RiskTransfer</li>
+        <li class="@(Model.MainTable.SupplierSpecificRequirements != Model.AuditTable.SupplierSpecificRequirements ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.SupplierSpecificRequirements</li>
+        <li class="@(Model.MainTable.FormulaNonFormula != Model.AuditTable.FormulaNonFormula ? "list-group-item height-lst list-group-item-info" : "list-group-item height-lst")">@Model.AuditTable.FormulaNonFormula</li>
+    </ul>
+</div>
+<form asp-action="Reject">
+
+    <div class="row row-cols-4 pb-2">
+        <input style="display:none" name="auditId" value="@Model.AuditTable.AuditId" />
+        <div class="col-9" style="margin-left: -4px;">
+            <textarea class="form-control" rows="3" name="Remarks" id="Remarks" placeholder="review comment (required to reject)" required></textarea>
+
+        </div>
+        <div class="col-3 p-4">
+            <input type="submit" value="Reject" class="btn btn-primary" />
+
+            <button type="submit" formaction="@Url.Action("Approved", new { id = Model.AuditTable.AuditId })" formnovalidate
+                    class="btn btn-success text-white"
+                    onclick="return confirm('Do you really want to Approve this Item?')">Approve</button>
+        </div>
+    </div>
+</form>
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+}

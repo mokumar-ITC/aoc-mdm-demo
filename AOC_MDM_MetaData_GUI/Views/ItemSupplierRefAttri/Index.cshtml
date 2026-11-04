@@ -1,0 +1,323 @@
+﻿@model dynamic
+@{
+    ViewData["Title"] = "Index";
+}
+<div class="pt-3">
+    @if (TempData["alertMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["alertMessage"]
+            <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
+            </button>
+        </div>
+    }
+    <h4>Item Supplier </h4>
+    <div id="toolbar">
+        <form>
+            <div class="row row-cols-4">
+                <div class="col">
+                    <select id="filterType" name="filterType" class="form-select">
+                        <option value="">Select</option>
+                        <option value="source">Source</option>
+                        <option value="item_id">Item Id</option>
+                        <option value="item_description">Item Description</option>
+                        <option value="vendor_id">Vendor Id</option>
+                        <option value="vendor_name">Vendor Name</option>
+                        <option value="vendor_number">Vendor Number</option>
+                         <option value="spend_area">Spend Area</option>
+                        <option value="UpdateStatus">Status</option>
+                        <option value="UpdatedDate">Updated Date</option>
+                        <option value="risk_transfer"> Risk Transfer</option>
+                        <option value="item_no">Item No</option>
+                        <option value="supplier_specific_requirements">Supplier Specific Requirements</option>
+                        <option value="formula_non_formula">Formula Non-Formula</option>
+                    </select>
+                    <input name="pageNum" value="@Model.pageNumber" style="display:none" />
+                    <input name="pageSizes" value="@Model.pageSize" style="display:none" />
+                    @* <input name="filterColumnName" value="@Model.filterColumnName" style="display:none" /> *@
+                </div>
+                <div class="col form-group">
+                    <input id="filterValue" name="filterValue" class="form-control" />
+                    <select id="statusValue" name="statusValue" class="form-select">
+                        <option value="">Select</option>
+                        <option value="PendingApproval">Pending Approval</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+                        <option value="UpdateDirectly">Update Directly</option>
+                        <option value="New">New</option>
+                    </select>
+                    <select id="formula" name="formula" class="form-select">
+                        <option value="">Select</option>
+                        <option value="Formula">Formula</option>
+                        <option value="Non-Formula">Non-Formula</option>
+                    </select>
+                </div>
+                <div class="col form-group">
+                    <input type="button" value="Filter" class="btn btn-primary" onclick="searchClick()" />
+                    <a class="btn btn-primary" asp-action="Index" onclick="showloader()">  Reset</a>
+
+                </div>
+                <div class="col">
+                    <a class="btn btn-primary" onclick="BulkUpdate()">  BulkUpdate</a>
+                </div>
+
+            </div>
+        </form>
+    </div>
+    <table class="table table-bordered" id="table"
+           data-toggle="table"
+           data-toolbar="#toolbar"
+           data-show-columns-search="true"
+           data-sort-name="name"
+           data-sort-order="desc"
+           data-show-columns="true"
+           data-buttons-align="right"
+           data-search="true"
+           data-show-fullscreen="true"
+           data-page-size="10"
+           data-page-number="1">
+        <thead class="tb-header">
+            <tr>
+
+                <th data-sortable="true">
+                    Source
+                </th>
+                <th data-sortable="true">
+                    Item Number
+                </th>
+                <th data-sortable="true" @(Model.filterColumnName == "item_id" ? "" : (GetColumn("Item Id", Model.selectedPageColumns) ? "" : "data-visible=false"))>
+                    Item Id
+                </th>
+                <th data-sortable="true">
+                    Item Description
+                </th>
+                <th data-sortable="true" @(Model.filterColumnName == "vendor_id" ? "" : (GetColumn("Vendor Id", Model.selectedPageColumns) ? "" : "data-visible=false"))>
+                    Vendor Id
+                </th>
+                <th data-sortable="true">
+                    Vendor Name
+                </th>
+                <th data-sortable="true">
+                    Vendor Number
+                </th>
+                        <th data-sortable="true">
+
+                       SpendArea
+                    </th>
+
+                <th>
+                    Status
+                </th>
+                <th data-sortable="true">
+                    Updated Date
+                </th>
+                <th data-sortable="true" @(Model.filterColumnName == "risk_transfer" ? "" : (GetColumn("Risk Transfer", Model.selectedPageColumns) ? "" : "data-visible=false"))>
+                    Risk Transfer
+                </th>
+                <th data-sortable="true" @(Model.filterColumnName == "supplier_specific_requirements" ? "" : (GetColumn("Supplier Specific Requirements", Model.selectedPageColumns) ? "" : "data-visible=false"))>
+                    Supplier Specific Requirements
+                </th>
+                <th data-sortable="true" @(Model.filterColumnName == "formula_non_formula" ? "" : (GetColumn("Formula Non Formula", Model.selectedPageColumns) ? "" : "data-visible=false"))>
+                    Formula Non Formula
+                </th>
+
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Items != null)
+            {
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+
+                        <td>
+                            @item.Source
+                        </td>
+                        <td>
+                            @item.ItemNo
+                        </td>
+                        <td>
+                            @item.ItemId
+                        </td>
+                        <td>
+                            @item.ItemDescription
+                        </td>
+                        <td>
+                            @item.VendorId
+                        </td>
+                        <td>
+                            @item.VendorName
+                        </td>
+                        <td>
+                            @item.VendorNumber
+                        </td>
+                             <td>
+                                 @item.SpendArea
+                              
+                            </td>
+                        <td>
+                            <span class="@(item.UpdateStatus=="PendingApproval" ? "badge rounded-pill alert-warning" :
+                                     item.UpdateStatus=="Approved" ? "badge rounded-pill alert-success" :
+                                      item.UpdateStatus=="UpdateDirectly" ? "badge rounded-pill alert-info" :
+                                     item.UpdateStatus=="Rejected" ? "badge rounded-pill alert-danger" : string.Empty)">
+                                @item.UpdateStatus
+                            </span>
+                        </td>
+                        <td>
+                            @(item.UpdatedDate?.ToString("dd-MM-yyyy HH:mm:ss"))
+                        </td>
+                        <td>
+                            @item.RiskTransfer
+                        </td>
+
+                        <td>
+                            @item.SupplierSpecificRequirements
+                        </td>
+                        <td>
+                            @item.FormulaNonFormula
+                        </td>
+                       
+                        <td>
+                            @if (item.UpdateStatus != "PendingApproval")
+                            {
+                                <a asp-action="Edit" onclick="showloader()" title="Edit" data-toggle="tooltip"
+                                   asp-route-id="@item.ItemId" asp-route-VendorName="@item.VendorName"
+                                   asp-route-ItemDescription="@item.ItemDescription" asp-route-ItemNo="@item.ItemNo"
+                                   asp-route-VendorId="@item.VendorId" asp-route-Source="@item.Source"
+                                   asp-route-SpendArea="@item.SpendArea"
+                                   class="btn btn-warning bi-pencil-square text-black"></a>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="9" class="text-center">No Item found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="row row-cols-2 pt-3">
+        <div>
+            Showing @Model.toPageNumber to @Model.fromPageNumber of @Model.TotalCount rows
+            <select id="pageSize" name="pageSize" style="width:70px">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+        </div>
+        <nav aria-label="Page navigation ">
+            <div class="pagination float-end"></div>
+        </nav>
+    </div>
+</div>
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+}
+<script>
+    @functions {
+        public bool GetColumn(string name, string selectedPageColumns)
+        {
+            string value = name;
+            if (!string.IsNullOrEmpty(selectedPageColumns) && selectedPageColumns.Contains(name))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+    $("#divLoading").hide();
+    $('#filterType').val("@Model.filterColumnName");
+   
+    $('#filterValue').val("@Model.filterValue");
+    $('#pageSize').val(@Model.pageSize);
+    $("#pageSize").change(function () {
+        $("#divLoading").show();
+        var pageSize = $('select[id=pageSize]').val();
+        var selectedPageColumns = JSON.stringify($("#table").bootstrapTable('getVisibleColumns').map(function (it) {
+            return it.title.trim();
+        }))
+        var url = '@Url.Action("Index", "ItemSupplierRefAttri")' + '?pageNumber=' + 1 + '&pageSize=' + pageSize + '&filterColumnName=' + '@Model.filterColumnName' + '&filterValue=' + '@Model.filterValue' + '&selectedPageColumns=' + selectedPageColumns; // Change to your desired URL window.open(url, '_blank');
+        window.location.href = url;
+    })
+
+    function searchClick() {
+        $("#divLoading").show();
+        var pageSize = $('select[id=pageSize]').val();
+        var selectedPageColumns = JSON.stringify($("#table").bootstrapTable('getVisibleColumns').map(function (it) {
+            return it.title.trim();
+        }))
+        var url = '@Url.Action("Search", "ItemSupplierRefAttri")' + '?pageNumber=' + 1 + '&pageSize=' + pageSize + '&filterColumnName=' + $('select[name=filterType]').val() + '&filterValue=' + $('#filterValue').val() + '&statusValue=' + $('select[id=statusValue]').val() + '&formula=' + $('select[id=formula]').val() + '&selectedPageColumns=' + selectedPageColumns; // Change to your desired URL window.open(url, '_blank');
+        window.location.href = url;
+    }
+    // init bootpag
+
+    $('.pagination').bootpag({
+        total: @Model.totalPages,
+        page: @Model.pageNumber,
+        maxVisible: 10,
+        leaps: true,
+        firstLastUse: true,
+        first: '←',
+        last: '→',
+        wrapClass: 'pagination',
+        activeClass: 'active',
+        disabledClass: 'disabled',
+        nextClass: 'next',
+        prevClass: 'prev',
+        lastClass: 'last',
+        firstClass: 'first'
+    }).on("page", function (event, num) {
+        $("#divLoading").show();
+        var selectedPageColumns = JSON.stringify($("#table").bootstrapTable('getVisibleColumns').map(function (it) {
+            return it.title.trim();
+        }))
+        var url = '@Url.Action("Index", "ItemSupplierRefAttri")' + '?pageNumber=' + num + '&pageSize=' + '@Model.pageSize' + '&filterColumnName=' + '@Model.filterColumnName' + '&filterValue=' + '@Model.filterValue' + '&selectedPageColumns=' + selectedPageColumns; // Change to your desired URL window.open(url, '_blank');
+        window.location.href = url;
+
+    });
+
+    $("#statusValue").hide();
+    $("#formula").hide();
+    $("#filterType").change(function () {
+        var filterType = $('select[name=filterType]').val();
+        if (filterType == "UpdateStatus") {
+            $("#filterValue").hide();
+            $("#filterValue").val("");
+            $("#statusValue").show();
+            $("#formula").hide();
+            $("#formula").val("");
+        } else if (filterType == "formula_non_formula") {
+            $("#filterValue").hide();
+            $("#filterValue").val("");
+            $("#statusValue").hide();
+            $("#statusValue").val("");
+            $("#formula").show();
+        } else {
+            $("#filterValue").val("");
+            $("#filterValue").show();
+            $("#statusValue").val("");
+            $("#statusValue").hide();
+            $("#formula").hide();
+            $("#formula").val("");
+        }
+    });
+   
+        function BulkUpdate() {
+            $("#divLoading").show();
+            
+        var selectedPageColumns = "";
+        var pageSize = $('select[id=pageSize]').val();
+        var searchValue1 = $('.bootstrap-table .search input').val();
+        var url = '@Url.Action("BulkUpdate", "ItemSupplierRefAttri")' + '?pageNumber=' + '@Model.pageNumber' + '&pageSize=' + pageSize + '&filterColumnName=' + '@Model.filterColumnName' + '&filterValue=' + '@Model.filterValue' + '&selectedPageColumns=' + selectedPageColumns + '&search=' + searchValue1; // Change to your desired URL window.open(url, '_blank');
+        window.location.href = url;
+        }
+</script>

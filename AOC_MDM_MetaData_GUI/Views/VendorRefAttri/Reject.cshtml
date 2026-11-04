@@ -1,0 +1,91 @@
+﻿@model AOC_MDM.Core.Entities.MDMVendorRefAttributesAudit
+@{
+    ViewData["Title"] = "Reject";
+}
+
+<div>
+    <h2>Reject</h2>
+
+    <a asp-action="VendorAudit" class="btn btn-primary float-end" onclick="showloader()">Back to List</a>
+</div>
+<h4>Vendor Ref Attributes</h4>
+<hr />
+
+<form asp-action="Reject">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="p-2 row row-cols-4">
+        <div class="col form-group">
+            <label asp-for="VendorId" class="control-label">Vendor Id</label>
+            <input asp-for="VendorId" class="form-control" readonly />
+           
+        </div>
+        <div class="col form-group">
+            <label asp-for="SupplierVendor" class="control-label">Supplier Vendor</label>
+            <input asp-for="SupplierVendor" class="form-control" readonly />
+            
+        </div>
+        <div class="col form-group">
+            <label asp-for="VendorEnglishName" class="control-label">Vendor English Name</label>
+            <input asp-for="VendorEnglishName" class="form-control" readonly />
+            
+        </div>
+        <div class="col form-group">
+            <label asp-for="VendorFamilyName" class="control-label">Vendor Family Name</label>
+            <input asp-for="VendorFamilyName" class="form-control" readonly />
+            
+        </div>
+    </div>
+    <div class="p-2 row row-cols-4">
+        <div class="col form-group">
+            <label asp-for="Level3" class="control-label"></label>
+            <input asp-for="Level3" class="form-control" readonly />
+           
+        </div>
+        <div class="col form-group">
+            <label asp-for="ParentCompany" class="control-label">Parent Company</label>
+            <input asp-for="ParentCompany" class="form-control" readonly />
+            
+        </div>
+        <div class="col form-group">
+            <label asp-for="AddressableSpend" class="control-label">Addressable Spend</label>
+            <input asp-for="AddressableSpend" class="form-control" readonly />
+            
+        </div>
+        <div class="col form-group">
+            <label asp-for="PayablesVeryImportantSupplier" class="control-label">Payables Very Important Supplier</label>
+            <input asp-for="PayablesVeryImportantSupplier" class="form-control" readonly />
+            
+        </div>
+    </div>
+    <div class="p-2 row row-cols-4">
+        <div class="col form-group">
+            <label asp-for="Intercompany" class="control-label"></label>
+            <input asp-for="Intercompany" class="form-control" readonly />
+            
+        </div>
+        <div class="col form-group">
+            <label asp-for="IndirectSpendOwner" class="control-label">Indirect Spend Owner</label>
+            <input asp-for="IndirectSpendOwner" class="form-control" readonly />
+           
+        </div>
+        <div class="col form-grou disabled">
+            <label asp-for="AuditId" class="control-label">Audit Id</label>
+            <input asp-for="AuditId" class="form-control" readonly />
+
+        </div>
+        <div class="col form-group">
+            Remark
+            <textarea class="form-control" rows="3" asp-for="Remarks" name="Remarks" id="Remarks" placeholder="review comment" required></textarea>
+            <span asp-validation-for="Remarks" class="text-danger"></span>
+        </div>
+        <div class="col form-group">
+            <br />
+            <input type="submit" value="Submit" class="btn btn-primary" />
+        </div>
+    </div>
+</form>
+
+@{
+    await Html.RenderPartialAsync("_LoaderPartial");
+    // await Html.RenderPartialAsync("_ValidationScriptsPartial");
+}
