@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AOC_MDM_MetaData_GUI.Controllers
 {
-    // Which columns can be edited on each table - Admin (level 4) only
+    // Which columns can be edited on each table, and what each column is called on screen - Admin (level 4) only
     public class ColumnSettingsController : Controller
     {
         private readonly IColumnEditService _columnEdit;
@@ -26,15 +26,26 @@ namespace AOC_MDM_MetaData_GUI.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RoleRequirement(4)]
-        public async Task<IActionResult> Save(string tableKey, List<string> editable)
+        public async Task<IActionResult> Save(string tableKey, List<string> editable, Dictionary<string, string?>? displayNames)
         {
             var table = ColumnEditCatalog.Find(tableKey);
             if (table == null) return NotFound();
 
-            var changed = await _columnEdit.SaveAsync(table.Key, editable, _userRoleService.CurrentUserName);
-            TempData["alertMessage"] = changed == 0
+            // Names are checked first, so a bad name saves nothing
+            var (renamed, error) = await _columnEdit.SaveDisplayNamesAsync(table.Key, displayNames ?? new(), _userRoleService.CurrentUserName);
+            if (error != null)
+            {
+                TempData["errorMessage"] = $"{table.Label}: {error}";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var locks = await _columnEdit.SaveAsync(table.Key, editable, _userRoleService.CurrentUserName);
+            var parts = new List<string>();
+            if (renamed > 0) parts.Add($"{renamed} column name(s)");
+            if (locks > 0) parts.Add($"{locks} column lock(s)");
+            TempData["alertMessage"] = parts.Count == 0
                 ? $"{table.Label}: no changes to save."
-                : $"{table.Label}: {changed} column(s) updated.";
+                : $"{table.Label}: {string.Join(" and ", parts)} updated.";
             return RedirectToAction(nameof(Index));
         }
     }

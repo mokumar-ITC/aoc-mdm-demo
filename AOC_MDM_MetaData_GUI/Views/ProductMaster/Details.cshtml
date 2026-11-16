@@ -1,6 +1,14 @@
 @model AOC_MDM.Services.DTO.ProductMasterDetail
 @using AOC_MDM.Services.DTO
+@inject AOC_MDM.Services.Interfaces.IProductMasterService ProductMasterService
 @{
+    var labels = await ProductMasterService.LabelsAsync();
+    // Workbook field -> label, using an admin's display name for the editable columns
+    string RowLabel(string field, string builtIn)
+    {
+        var prop = ProductFieldLabels.All.FirstOrDefault(f => f.Field == field).Property;
+        return prop == null ? builtIn : ProductFieldLabels.Label(labels, prop);
+    }
     var userLevel = ViewBag.UserLevel as int? ?? 0;
     var pendingReq = Model.PendingRequest;
     var p = Model.Product;
@@ -57,7 +65,7 @@
             {
                 <span class="badge rounded-pill @ProductApproval.BadgeClass(p.UpdateStatus)">@ProductApproval.Label(p.UpdateStatus)</span>
             }
-            <span class="text-muted ms-2">Product code <strong>@p.ProductCode</strong></span>
+            <span class="text-muted ms-2">@ProductFieldLabels.Label(labels, "ProductCode") <strong>@p.ProductCode</strong></span>
             @if (p.SourceRow != null)
             {
                 <span class="text-muted ms-2">&middot; Workbook row @p.SourceRow</span>
@@ -105,7 +113,7 @@
                                     var tip = Model.FieldDescriptions.GetValueOrDefault(row.Field);
                                     <tr>
                                         <th class="ps-3">
-                                            @row.Label
+                                            @RowLabel(row.Field, row.Label)
                                             @if (!string.IsNullOrEmpty(tip))
                                             {
                                                 <i class="bi bi-info-circle pm-help" title="@tip"></i>

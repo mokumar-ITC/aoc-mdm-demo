@@ -1,6 +1,12 @@
 @model AOC_MDM.Services.DTO.ProductMasterBrowse
 @using AOC_MDM.Services.DTO
+@inject AOC_MDM.Services.Interfaces.IProductMasterService ProductMasterService
 @{
+    var labels = await ProductMasterService.LabelsAsync();
+    string L(string property) => ProductFieldLabels.Label(labels, property);
+    var canBulk = (ViewBag.UserLevel as int? ?? 0) >= 2;
+    var canDecide = (ViewBag.UserLevel as int? ?? 0) >= 3;   // Checker / Admin: bulk approve / reject pending rows here
+    var me = ViewBag.UserName as string ?? "";
     var userLevel = ViewBag.UserLevel as int? ?? 0;
     ViewData["Title"] = "Product Master";
     var openIds = Model.Breadcrumb.Select(b => b.NodeId).ToHashSet();
@@ -136,8 +142,52 @@
                 </div>
             }
 
+            @if (canBulk)
+            {
+                <div id="pmBulkToolbar" class="d-flex flex-wrap align-items-center gap-2">
+                    <button type="button" class="btn btn-primary btn-sm" id="pmBulkBtn" disabled
+                            title="Tick the products to change, then edit them together">
+                        <i class="bi bi-pencil-square"></i> Bulk update selected <span class="badge bg-light text-dark" id="pmSelCount">0</span>
+                    </button>
+                    @if (canDecide)
+                    {
+                        <button type="button" class="btn btn-success btn-sm" id="pmApproveSelected" disabled title="Approve the ticked products that are waiting for approval">
+                            <i class="bi bi-check2-all"></i> Approve selected <span class="badge bg-light text-dark pm-pending-count">0</span>
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm" id="pmRejectSelected" disabled title="Reject the ticked products that are waiting for approval">
+                            <i class="bi bi-x-circle"></i> Reject selected <span class="badge bg-light text-dark pm-pending-count">0</span>
+                        </button>
+                        <span class="text-muted small d-none d-md-inline">Tick rows to update them, or tick rows waiting for approval to approve or reject them. Your own requests can't be ticked.</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted small d-none d-md-inline">Tick rows to update several products at once. Products waiting for approval can't be ticked.</span>
+                    }
+                </div>
+                <form id="pmBulkGo" method="get" action="@Url.Action("BulkUpdate")" hidden></form>
+                @if (canDecide)
+                {
+                    <form asp-action="ApproveSelected" method="post" id="pmDecideForm">
+                        <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                        <div id="pmDecideIds"></div>
+                        <div class="card mb-2" id="pmDecidePanel" hidden>
+                            <div class="card-body py-2">
+                                <label for="pmDecideRemarks" class="form-label mb-0" id="pmDecideLabel">Review comment</label>
+                                <textarea class="form-control" rows="2" name="remarks" id="pmDecideRemarks" maxlength="2000"></textarea>
+                                <div class="d-flex gap-2 mt-2">
+                                    <button type="submit" class="btn btn-sm" id="pmDecideSubmit"></button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="pmDecideCancel">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                }
+            }
             <table class="table table-bordered table-hover" id="table"
                    data-toggle="table"
+                   data-toolbar="@(canBulk ? "#pmBulkToolbar" : null)"
+                   data-id-field="pid"
+                   data-maintain-meta-data="true"
                    data-page-size="25"
                    data-page-list="[25, 50, 100, All]"
                    data-show-columns="true"
@@ -150,21 +200,29 @@
                    data-resizable="true">
                 <thead class="tb-header">
                     <tr>
-                        <th data-sortable="true" title="@Tip("Product_Name")">Product Name</th>
-                        <th data-sortable="true" title="@Tip("Product_Code")">Code</th>
+                        @if (canBulk)
+                        {
+                            <th data-field="state" data-checkbox="true" data-formatter="pmCheckFormatter"></th>
+                        }
+                        <th data-field="pid" data-visible="false" data-switchable="false">Id</th>
+                        <th data-field="pending" data-visible="false" data-switchable="false">Pending</th>
+                        <th data-field="audit" data-visible="false" data-switchable="false">Request</th>
+                        <th data-field="own" data-visible="false" data-switchable="false">Own</th>
+                        <th data-sortable="true" title="@Tip("Product_Name")">@L("ProductName")</th>
+                        <th data-sortable="true" title="@Tip("Product_Code")">@L("ProductCode")</th>
                         <th data-sortable="true" title="@Tip("Product_Family")" data-visible="false">Product Family</th>
                         <th data-sortable="true" title="@Tip("Product_Type")" data-visible="false">Product Type</th>
                         <th data-sortable="true" title="@Tip("Model")">Model</th>
                         <th data-sortable="true" title="@Tip("Size")">Size</th>
-                        <th data-sortable="true" title="@Tip("Capacity Group")">Capacity Group</th>
-                        <th data-sortable="true" title="@Tip("SIOP_Model")" data-visible="false">SIOP Model</th>
-                        <th data-sortable="true" title="@Tip("SIOP_Tier")" data-visible="false">SIOP Tier</th>
-                        <th data-sortable="true" title="@Tip("Default_Supply_Source")" data-visible="false">Supply Source</th>
-                        <th data-sortable="true" title="@Tip("Sale_Price_Per_Unit")" class="text-end">Price / Unit</th>
-                        <th data-sortable="true" title="@Tip("Sale_Price_Per_Hour")" class="text-end" data-visible="false">Price / Hour</th>
-                        <th data-sortable="true" title="@Tip("Est_Fab_Hours")" class="text-end" data-visible="false">Fab Hrs</th>
-                        <th data-sortable="true" title="@Tip("Est_Assembly_Hours")" class="text-end" data-visible="false">Assembly Hrs</th>
-                        <th data-sortable="true" title="@Tip("Status")">Status</th>
+                        <th data-sortable="true" title="@Tip("Capacity Group")">@L("CapacityGroup")</th>
+                        <th data-sortable="true" title="@Tip("SIOP_Model")" data-visible="false">@L("SiopModel")</th>
+                        <th data-sortable="true" title="@Tip("SIOP_Tier")" data-visible="false">@L("SiopTier")</th>
+                        <th data-sortable="true" title="@Tip("Default_Supply_Source")" data-visible="false">@L("DefaultSupplySource")</th>
+                        <th data-sortable="true" title="@Tip("Sale_Price_Per_Unit")" class="text-end">@L("SalePricePerUnit")</th>
+                        <th data-sortable="true" title="@Tip("Sale_Price_Per_Hour")" class="text-end" data-visible="false">@L("SalePricePerHour")</th>
+                        <th data-sortable="true" title="@Tip("Est_Fab_Hours")" class="text-end" data-visible="false">@L("EstFabHours")</th>
+                        <th data-sortable="true" title="@Tip("Est_Assembly_Hours")" class="text-end" data-visible="false">@L("EstAssemblyHours")</th>
+                        <th data-sortable="true" title="@Tip("Status")">@L("Status")</th>
                         <th data-sortable="true" title="Maker / checker state of the latest change">Approval</th>
                         <th data-sortable="true" data-visible="false">Updated By</th>
                         <th data-sortable="true" data-visible="false">Updated</th>
@@ -175,6 +233,15 @@
                     @foreach (var p in Model.Products)
                     {
                         <tr>
+                            @if (canBulk)
+                            {
+                                <td></td>
+                            }
+                            <td>@p.ProductId</td>
+                            <td>@(p.UpdateStatus == ProductApproval.Pending ? "1" : "")</td>
+                            @{ Model.PendingRequests.TryGetValue(p.ProductId, out var request); }
+                            <td>@request?.AuditId</td>
+                            <td>@(request != null && string.Equals(request.MakerId, me, StringComparison.OrdinalIgnoreCase) ? "1" : "")</td>
                             <td><a asp-action="Details" asp-route-id="@p.ProductId">@p.ProductName</a></td>
                             <td>@p.ProductCode</td>
                             <td>@p.ProductFamily</td>
@@ -231,6 +298,93 @@
 
 @section Scripts {
     <script>
+        // A row waiting for approval can't be bulk-updated. A Checker can tick it to approve or reject it,
+        // unless they submitted it themselves.
+        var pmCanDecide = @(canDecide ? "true" : "false");
+        function pmCheckFormatter(value, row) {
+            if (row.pending !== '1') return value;
+            return pmCanDecide && row.audit && row.own !== '1' ? value : { disabled: true, checked: false };
+        }
+        (function () {
+            var btn = document.getElementById('pmBulkBtn');
+            if (!btn) return;
+            var max = @ProductBulk.MaxRows;
+            function rows() { return $('#table').bootstrapTable('getSelections'); }
+            function trim(v) { return String(v == null ? '' : v).trim(); }
+            function toUpdate() { return rows().filter(function (r) { return r.pending !== '1'; }).map(function (r) { return trim(r.pid); }).filter(Boolean); }
+            function toDecide() { return rows().filter(function (r) { return r.pending === '1'; }).map(function (r) { return trim(r.audit); }).filter(Boolean); }
+
+            var approveBtn = document.getElementById('pmApproveSelected');
+            var rejectBtn = document.getElementById('pmRejectSelected');
+            var panel = document.getElementById('pmDecidePanel');
+            var mode = null;
+
+            function update() {
+                var n = toUpdate().length;
+                document.getElementById('pmSelCount').textContent = n;
+                btn.disabled = n === 0;
+                if (!approveBtn) return;
+                var d = toDecide().length;
+                document.querySelectorAll('.pm-pending-count').forEach(function (b) { b.textContent = d; });
+                approveBtn.disabled = rejectBtn.disabled = d === 0;
+                if (d === 0) close(); else if (mode) label();
+            }
+            $('#table').on('check.bs.table uncheck.bs.table check-all.bs.table uncheck-all.bs.table check-some.bs.table uncheck-some.bs.table post-body.bs.table', update);
+
+            btn.addEventListener('click', function () {
+                var ids = toUpdate();
+                if (ids.length === 0) return;
+                if (ids.length > max) { alert('You can update at most ' + max + ' products at once. You selected ' + ids.length + '.'); return; }
+                var go = document.getElementById('pmBulkGo');
+                go.innerHTML = '';
+                ids.forEach(function (id) {
+                    var input = document.createElement('input');
+                    input.type = 'hidden'; input.name = 'ids'; input.value = id;
+                    go.appendChild(input);
+                });
+                showloader();
+                go.submit();
+            });
+
+            if (!approveBtn) return;
+            var form = document.getElementById('pmDecideForm');
+            var remarks = document.getElementById('pmDecideRemarks');
+            var submit = document.getElementById('pmDecideSubmit');
+            function label() {
+                var approve = mode === 'approve';
+                document.getElementById('pmDecideLabel').textContent = approve
+                    ? 'Review comment (optional, saved on every approved request)'
+                    : 'Reason for rejecting (required, sent to every Maker)';
+                submit.className = 'btn btn-sm ' + (approve ? 'btn-success' : 'btn-danger');
+                submit.textContent = (approve ? 'Approve ' : 'Reject ') + toDecide().length + ' request(s)';
+            }
+            function open(m) {
+                mode = m;
+                form.action = m === 'approve' ? '@Url.Action("ApproveSelected")' : '@Url.Action("RejectSelected")';
+                panel.hidden = false;
+                label();
+                remarks.focus();
+            }
+            function close() { mode = null; if (panel) panel.hidden = true; }
+            approveBtn.addEventListener('click', function () { open('approve'); });
+            rejectBtn.addEventListener('click', function () { open('reject'); });
+            document.getElementById('pmDecideCancel').addEventListener('click', close);
+            form.addEventListener('submit', function (e) {
+                var ids = toDecide();
+                if (ids.length === 0) { e.preventDefault(); return; }
+                if (mode === 'reject' && !remarks.value.trim()) { e.preventDefault(); alert('Enter a reason to reject the selected requests.'); return; }
+                if (!confirm((mode === 'approve' ? 'Approve ' : 'Reject ') + ids.length + ' request(s)?')) { e.preventDefault(); return; }
+                var holder = document.getElementById('pmDecideIds');
+                holder.innerHTML = '';
+                ids.forEach(function (id) {
+                    var input = document.createElement('input');
+                    input.type = 'hidden'; input.name = 'auditIds'; input.value = id;
+                    holder.appendChild(input);
+                });
+                showloader();
+            });
+        })();
+
         (function () {
             var tree = document.getElementById('pmTree');
             function setOpen(li, open) {

@@ -29,6 +29,7 @@ namespace AOC_MDM_MetaData_GUI.Controllers
         public async Task<IActionResult> Index(long? nodeId, string? search, string? status, string? approval)
         {
             ViewBag.UserLevel = UserLevel;
+            ViewBag.UserName = UserName;
             return View(await _productMaster.BrowseAsync(nodeId, search, status, approval));
         }
 
@@ -80,11 +81,53 @@ namespace AOC_MDM_MetaData_GUI.Controllers
             return RedirectToAction(nameof(Details), new { id = form.ProductId });
         }
 
+        // ------------------------------------------------------------ bulk update (rows selected in the list)
+
+        [RoleRequirement(2)] //2 => Maker or above
+        public async Task<IActionResult> BulkUpdate(List<long> ids)
+        {
+            if (ids == null || ids.Count == 0)
+            {
+                TempData["errorMessage"] = "Select one or more products in the list, then choose Bulk update.";
+                return RedirectToAction(nameof(Index));
+            }
+            var page = await _productMaster.GetBulkEditAsync(ids, UserLevel);
+            if (page.Form.Rows.Count == 0)
+            {
+                TempData["errorMessage"] = "None of the selected products can be updated now. " + string.Join(" ", page.Skipped);
+                return RedirectToAction(nameof(Index));
+            }
+            return View(page);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RoleRequirement(2)]
+        [RequestFormLimits(ValueCountLimit = 10000)]   // about 20 fields per row, up to ProductBulk.MaxRows rows
+        public async Task<IActionResult> BulkUpdate(ProductBulkEditForm form)
+        {
+            var result = await _productMaster.SubmitBulkEditAsync(form, UserName, UserLevel, RoleDesc);
+            if (!result.Success)
+            {
+                var page = await _productMaster.GetBulkEditAsync(form.Rows.Select(r => r.ProductId), UserLevel, form, result.RowErrors);
+                if (page.Form.Rows.Count == 0) return RedirectToAction(nameof(Index));
+                ViewBag.FormError = result.Message;
+                return View(page);
+            }
+
+            _logger.LogInformation("{User} (level {Level}) bulk-updated {Count} product(s): {Message}", UserName, UserLevel, form.Rows.Count, result.Message);
+            SetBulkMessage(result);
+            return UserLevel >= 3
+                ? RedirectToAction(nameof(Index))
+                : RedirectToAction(nameof(Index), new { approval = ProductApproval.Pending });
+        }
+
         // ------------------------------------------------------------ approval (checker)
 
         [RoleRequirement(3)] //3 => Checker or above
         public async Task<IActionResult> Approvals()
         {
+            ViewBag.UserName = UserName;
             return View(await _productMaster.GetPendingAsync());
         }
 
@@ -111,6 +154,42 @@ namespace AOC_MDM_MetaData_GUI.Controllers
         {
             var result = await _productMaster.RejectAsync(auditId, UserName, UserLevel, RoleDesc, remarks);
             return AfterDecision(result, auditId, "rejected", null);
+        }
+
+        // Bulk approve / reject of the requests ticked on the Product Approval page or the product list.
+        // returnUrl: the page to go back to (the product list, with its filters); default is Product Approval.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RoleRequirement(3)]
+        public async Task<IActionResult> ApproveSelected(List<long> auditIds, string? remarks, string? returnUrl)
+        {
+            var result = await _productMaster.ApproveManyAsync(auditIds, UserName, UserLevel, RoleDesc, remarks);
+            return AfterBulkDecision(result, "approved", auditIds, returnUrl);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RoleRequirement(3)]
+        public async Task<IActionResult> RejectSelected(List<long> auditIds, string? remarks, string? returnUrl)
+        {
+            var result = await _productMaster.RejectManyAsync(auditIds, UserName, UserLevel, RoleDesc, remarks);
+            return AfterBulkDecision(result, "rejected", auditIds, returnUrl);
+        }
+
+        private IActionResult AfterBulkDecision(ProductBulkResult result, string verb, List<long> auditIds, string? returnUrl)
+        {
+            _logger.LogInformation("{User} bulk {Verb} {Count} product change request(s): {Message}", UserName, verb, auditIds?.Count ?? 0, result.Message);
+            SetBulkMessage(result);
+            return !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)
+                ? LocalRedirect(returnUrl)
+                : RedirectToAction(nameof(Approvals));
+        }
+
+        // Shown by _Alert as a banner that stays until closed: bulk results can list several skipped rows
+        private void SetBulkMessage(ProductBulkResult result)
+        {
+            TempData["bulkMessage"] = result.Message;
+            TempData["bulkOk"] = result.Success;
         }
 
         private IActionResult AfterDecision(ProductWorkflowResult result, long auditId, string verb, string? returnTo)

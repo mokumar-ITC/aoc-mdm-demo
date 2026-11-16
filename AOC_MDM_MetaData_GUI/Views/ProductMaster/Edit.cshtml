@@ -1,6 +1,8 @@
 @model AOC_MDM.Services.DTO.ProductEditPage
 @using System.Globalization
+@inject AOC_MDM.Services.Interfaces.IProductMasterService ProductMasterService
 @{
+    var labels = await ProductMasterService.LabelsAsync();
     var p = Model.Product;
     ViewData["Title"] = "Edit " + p.ProductName;
     var f = Model.Form;
@@ -91,7 +93,7 @@
                                     var wide = fld.Prop == "ProductName" ? "col-12" : "col-sm-6";
                                     <div class="@wide">
                                         <label for="@id" class="form-label mb-0">
-                                            @fld.Label
+                                            @AOC_MDM.Services.DTO.ProductFieldLabels.Label(labels, fld.Prop)
                                             @if (!string.IsNullOrEmpty(Tip(fld.Field)))
                                             {
                                                 <i class="bi bi-info-circle pm-help" title="@Tip(fld.Field)"></i>

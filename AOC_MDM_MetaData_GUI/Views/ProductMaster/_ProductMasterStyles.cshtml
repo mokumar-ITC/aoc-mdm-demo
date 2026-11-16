@@ -40,6 +40,23 @@
     .pm-note-secondary { color: #41464b; background: #e2e3e5; border-color: #d3d6d8; }
     .pm-note-danger { color: #842029; background: #f8d7da; border-color: #f5c2c7; }
     .pm-note-warning { color: #664d03; background: #fff3cd; border-color: #ffecb5; }
+    .pm-note-success { color: #0f5132; background: #d1e7dd; border-color: #badbcc; }
+
+    /* Bulk update grid */
+    .pm-bulk-wrap { overflow: auto; max-height: 70vh; border: 1px solid #dee2e6; border-radius: 4px; }
+    .pm-bulk { margin: 0; white-space: nowrap; }
+    .pm-bulk th, .pm-bulk td { padding: 4px 6px; vertical-align: middle; }
+    .pm-bulk thead th { position: sticky; top: 0; z-index: 2; }
+    .pm-bulk .pm-fill-row td { position: sticky; top: 33px; z-index: 2; background: #f2f9fe; }
+    .pm-bulk .pm-sticky { position: sticky; left: 0; z-index: 1; background: #fff; min-width: 220px; max-width: 280px; white-space: normal; }
+    .pm-bulk thead .pm-sticky, .pm-bulk .pm-fill-row .pm-sticky { z-index: 3; }
+    .pm-bulk thead .pm-sticky { background: inherit; }
+    .pm-bulk .pm-fill-row .pm-sticky { background: #f2f9fe; }
+    .pm-bulk input, .pm-bulk select { min-width: 110px; }
+    .pm-bulk .pm-col-ProductName input { min-width: 240px; }
+    .pm-bulk tr.pm-row-error td { background: #fdf1f2; }
+    .pm-bulk tr.pm-row-error .pm-sticky { background: #fdf1f2; }
+    .pm-row-msg { color: #842029; font-size: .85rem; }
 
     .pm-changed { border-color: #0391e8; background: #eef7fe; }
     .pm-was { color: #035f99; }

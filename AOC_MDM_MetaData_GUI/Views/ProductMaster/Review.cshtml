@@ -54,7 +54,7 @@
                 var locked = Model.Locked.Contains(f.Property);
                 <tr class="@(changed ? "table-info" : "")">
                     <td>
-                        @f.Label
+                        @ProductFieldLabels.Label(Model.Labels, f.Property)
                         @if (changed) { <span class="badge bg-primary ms-1">changed</span> }
                         @if (locked && changed) { <span class="badge bg-secondary ms-1" title="Locked by an administrator: approving keeps the original value">locked</span> }
                     </td>

@@ -69,6 +69,14 @@ psql -h localhost -U postgres -d aoc_mdm -v ON_ERROR_STOP=1 -f db\postgres\008_p
 
 Admins can lock individual columns under **Administration > Column Editing**. A locked column can't be changed by anyone, including Admins, through the Edit and Bulk Update pages, hierarchy Rename and Enable, or an approval. Pending requests approved after a lock keep the column's current value and still apply their other changes. Every column is editable until an Admin locks it.
 
+On the same page, Admins can give each column a **Display name** to match their naming convention. Product Master pages (list, details, edit, bulk update, review and approval) show the new name. Leave the field blank to go back to the built-in name. Only the on-screen label changes: database columns and `publish` views keep their names. Run `009_column_display_names.sql` on an existing database to add this.
+
+## Bulk update and bulk approval (Product Master)
+
+- **Makers (and above)** tick rows in the Product Master list and choose **Bulk update selected** to open a grid of those products (up to 200). They can edit any cell, or fill a value into every row at once with the **Set for all** row. One reason covers the whole batch. The batch is saved only when every row is valid. Products with no changes are skipped, and products already waiting for approval can't be ticked.
+- A Maker's batch creates one pending request per changed product. A Checker's or Admin's batch is applied directly, as with single edits.
+- **Checkers** tick requests on **Product Approval** and choose **Approve selected** or **Reject selected** (rejecting needs a comment). Each request is decided on its own: a Checker's own requests can't be ticked, and any request that can't be decided is listed in the result.
+
 ## Getting started
 
 You need the .NET 8 SDK, PostgreSQL and the PostgreSQL ODBC driver (Unicode).
@@ -78,7 +86,8 @@ You need the .NET 8 SDK, PostgreSQL and the PostgreSQL ODBC driver (Unicode).
    ```powershell
    $env:PGPASSWORD = '<your postgres password>'
    $scripts = '001_aoc_mdm_schema.sql', '004_hierarchy_integrity_and_users.sql', '005_demo_users.sql', '006_column_edit_settings.sql',
-              '002_seed_test_data.sql', '003_publish_views.sql', '007_product_master_schema.sql', '008_product_master_seed.sql'
+              '009_column_display_names.sql', '002_seed_test_data.sql', '003_publish_views.sql', '007_product_master_schema.sql',
+              '008_product_master_seed.sql'
    foreach ($s in $scripts) { psql -h localhost -U postgres -d aoc_mdm -v ON_ERROR_STOP=1 -f "db\postgres\$s" }
    ```
 

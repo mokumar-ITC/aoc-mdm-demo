@@ -1,3 +1,4 @@
+using AOC_MDM.Core.Entities;
 using AOC_MDM.Core.Interfaces;
 using AOC_MDM.Services.DTO;
 using AOC_MDM.Services.Interfaces;
@@ -5,12 +6,14 @@ using Microsoft.Extensions.Logging;
 
 namespace AOC_MDM.Services.Service
 {
-    // Registered per request, so a request sees one consistent set of locks and reads them from the database once.
+    // Registered per request, so a request sees one consistent set of locks and labels and reads each table's settings once.
     public class ColumnEditService : IColumnEditService
     {
+        public const int MaxDisplayNameLength = 100;
+
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<ColumnEditService> _logger;
-        private readonly Dictionary<string, IReadOnlySet<string>> _lockedByTable = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, IReadOnlyList<ColumnEditSetting>> _settingsByTable = new(StringComparer.OrdinalIgnoreCase);
 
         public ColumnEditService(IUnitOfWork unitOfWork, ILogger<ColumnEditService> logger)
         {
@@ -26,7 +29,7 @@ namespace AOC_MDM.Services.Service
             return ColumnEditCatalog.Tables.Select(table => new TableEditStatus(table, table.Columns.Select(column =>
             {
                 settings.TryGetValue((table.Key, column.Key), out var setting);
-                return new ColumnEditStatus(column, setting?.IsEditable ?? true, setting?.UpdatedBy, setting?.UpdatedDate);
+                return new ColumnEditStatus(column, setting?.IsEditable ?? true, setting?.DisplayName, setting?.UpdatedBy, setting?.UpdatedDate);
             }).ToList())).ToList();
         }
 
@@ -47,20 +50,57 @@ namespace AOC_MDM.Services.Service
                 changed++;
             }
 
-            _lockedByTable.Remove(table.Key);
+            _settingsByTable.Remove(table.Key);
             return changed;
         }
 
-        public async Task<IReadOnlySet<string>> GetLockedColumnsAsync(string tableKey)
+        public async Task<(int Changed, string? Error)> SaveDisplayNamesAsync(string tableKey, IDictionary<string, string?> displayNames, string userName)
         {
-            if (_lockedByTable.TryGetValue(tableKey, out var cached)) return cached;
+            var table = ColumnEditCatalog.Find(tableKey) ?? throw new InvalidOperationException($"Unknown table \"{tableKey}\".");
+            var stored = (await SettingsAsync(table.Key)).ToDictionary(s => s.ColumnKey, s => s.DisplayName, StringComparer.OrdinalIgnoreCase);
+            var posted = new Dictionary<string, string?>(displayNames ?? new Dictionary<string, string?>(), StringComparer.OrdinalIgnoreCase);
 
-            var settings = await _unitOfWork.ColumnEditSettingRepository.GetByTableAsync(tableKey.ToLowerInvariant());
-            IReadOnlySet<string> locked = new HashSet<string>(
-                settings.Where(s => !s.IsEditable).Select(s => s.ColumnKey), StringComparer.OrdinalIgnoreCase);
-            _lockedByTable[tableKey] = locked;
-            return locked;
+            // The name each column will have after the save; a column not posted keeps its stored name
+            var wanted = table.Columns.ToDictionary(c => c.Key, c =>
+            {
+                var name = posted.TryGetValue(c.Key, out var p) ? Clean(p) : stored.GetValueOrDefault(c.Key);
+                return string.Equals(name, c.Label, StringComparison.Ordinal) ? null : name;   // same as built-in = no override
+            });
+
+            var tooLong = table.Columns.FirstOrDefault(c => wanted[c.Key]?.Length > MaxDisplayNameLength);
+            if (tooLong != null) return (0, $"The name for \"{tooLong.Label}\" can be at most {MaxDisplayNameLength} characters.");
+
+            var duplicate = table.Columns.Select(c => wanted[c.Key] ?? c.Label)
+                .GroupBy(l => l, StringComparer.OrdinalIgnoreCase).FirstOrDefault(g => g.Count() > 1);
+            if (duplicate != null) return (0, $"Two columns would both be named \"{duplicate.Key}\". Give each column a different name.");
+
+            var changed = 0;
+            foreach (var column in table.Columns)
+            {
+                var name = wanted[column.Key];
+                if (string.Equals(name, stored.GetValueOrDefault(column.Key), StringComparison.Ordinal)) continue;
+
+                await _unitOfWork.ColumnEditSettingRepository.SaveDisplayNameAsync(table.Key, column.Key, name, userName);
+                _logger.LogInformation("{User} renamed {Table}.{Column} to {Name}", userName, table.Key, column.Key, name ?? "(built-in label)");
+                changed++;
+            }
+
+            _settingsByTable.Remove(table.Key);
+            return (changed, null);
         }
+
+        public async Task<IReadOnlyDictionary<string, string>> GetLabelsAsync(string tableKey)
+        {
+            var table = ColumnEditCatalog.Find(tableKey);
+            if (table == null) return new Dictionary<string, string>();
+
+            var names = (await SettingsAsync(table.Key)).Where(s => s.DisplayName != null)
+                .ToDictionary(s => s.ColumnKey, s => s.DisplayName!, StringComparer.OrdinalIgnoreCase);
+            return table.Columns.ToDictionary(c => c.Key, c => names.GetValueOrDefault(c.Key) ?? c.Label, StringComparer.OrdinalIgnoreCase);
+        }
+
+        public async Task<IReadOnlySet<string>> GetLockedColumnsAsync(string tableKey) =>
+            new HashSet<string>((await SettingsAsync(tableKey)).Where(s => !s.IsEditable).Select(s => s.ColumnKey), StringComparer.OrdinalIgnoreCase);
 
         public async Task<bool> IsLockedAsync(string tableKey, string columnKey) =>
             (await GetLockedColumnsAsync(tableKey)).Contains(columnKey);
@@ -92,8 +132,18 @@ namespace AOC_MDM.Services.Service
             var locked = await GetLockedColumnsAsync(tableKey);
             if (table == null || locked.Count == 0) return "";
 
-            var labels = table.Columns.Where(c => locked.Contains(c.Key)).Select(c => c.Label);
-            return $" Locked columns were not changed: {string.Join(", ", labels)}.";
+            var labels = await GetLabelsAsync(tableKey);
+            return $" Locked columns were not changed: {string.Join(", ", table.Columns.Where(c => locked.Contains(c.Key)).Select(c => labels[c.Key]))}.";
         }
+
+        private async Task<IReadOnlyList<ColumnEditSetting>> SettingsAsync(string tableKey)
+        {
+            if (_settingsByTable.TryGetValue(tableKey, out var cached)) return cached;
+            var settings = (await _unitOfWork.ColumnEditSettingRepository.GetByTableAsync(tableKey.ToLowerInvariant())).ToList();
+            _settingsByTable[tableKey] = settings;
+            return settings;
+        }
+
+        private static string? Clean(string? s) => string.IsNullOrWhiteSpace(s) ? null : string.Join(' ', s.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
     }
 }

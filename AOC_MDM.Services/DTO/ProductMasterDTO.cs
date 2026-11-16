@@ -23,6 +23,8 @@ namespace AOC_MDM.Services.DTO
         public IReadOnlyDictionary<string, string?> FieldDescriptions { get; init; } = new Dictionary<string, string?>();
         public int ProductsInScope { get; init; }
         public int PendingTotal { get; init; }
+        // Open change request of each product waiting for approval (product id -> request), for bulk approve on the list
+        public IReadOnlyDictionary<long, ProductMasterAudit> PendingRequests { get; init; } = new Dictionary<long, ProductMasterAudit>();
         public string? Search { get; init; }
         public string? Status { get; init; }
         public string? Approval { get; init; }
@@ -66,10 +68,42 @@ namespace AOC_MDM.Services.DTO
         public ProductMasterAudit Request { get; init; } = new();
         public IReadOnlyCollection<string> Changed { get; init; } = Array.Empty<string>();
         public IReadOnlyCollection<string> Locked { get; init; } = Array.Empty<string>();
+        public IReadOnlyDictionary<string, string> Labels { get; init; } = new Dictionary<string, string>();
         public bool IsOwnRequest { get; init; }
     }
 
     public record ProductWorkflowResult(bool Success, string Message, long? ProductId = null);
+
+    // Posted by the Bulk Update grid: one row per selected product, one reason for the whole batch
+    public class ProductBulkEditForm
+    {
+        public List<ProductEditForm> Rows { get; set; } = new();
+        public string? ChangeRemarks { get; set; }
+    }
+
+    public class ProductBulkEditPage
+    {
+        public ProductBulkEditForm Form { get; init; } = new();
+        public IReadOnlyDictionary<long, ProductMasterRecord> Products { get; init; } = new Dictionary<long, ProductMasterRecord>();
+        public IReadOnlyList<string> Skipped { get; init; } = Array.Empty<string>();          // selected but can't be edited now
+        public IReadOnlyDictionary<long, string> RowErrors { get; init; } = new Dictionary<long, string>();
+        public IReadOnlyDictionary<string, string> Labels { get; init; } = new Dictionary<string, string>();
+        public IReadOnlyCollection<string> Locked { get; init; } = Array.Empty<string>();
+        public IReadOnlyList<string> CapacityGroups { get; init; } = Array.Empty<string>();
+        public IReadOnlyList<string> SupplySources { get; init; } = Array.Empty<string>();
+        public IReadOnlyList<string> SiopModels { get; init; } = Array.Empty<string>();
+        public IReadOnlyList<string> SiopTiers { get; init; } = Array.Empty<string>();
+        public bool GoesToApproval { get; init; }   // true for Makers
+    }
+
+    // Outcome of a bulk update, approve or reject. RowErrors (product id -> reason) is set when the
+    // bulk update was refused because of invalid rows; nothing was saved in that case.
+    public record ProductBulkResult(bool Success, string Message, IReadOnlyDictionary<long, string>? RowErrors = null);
+
+    public static class ProductBulk
+    {
+        public const int MaxRows = 200;
+    }
 
     public static class ProductApproval
     {
@@ -103,7 +137,8 @@ namespace AOC_MDM.Services.DTO
         };
     }
 
-    // Display labels for the editable product columns, in form order
+    // Built-in display labels for the editable product columns, in form order. An admin can rename them
+    // under Administration > Column Editing; screens show the renamed label through Label(labels, property).
     public static class ProductFieldLabels
     {
         public static readonly IReadOnlyList<(string Property, string Field, string Label)> All = new[]
@@ -129,6 +164,10 @@ namespace AOC_MDM.Services.DTO
         };
 
         public static string Label(string property) => All.FirstOrDefault(f => f.Property == property).Label ?? property;
+
+        // The admin's display name when one is set (see ColumnEditService.GetLabelsAsync), else the built-in label
+        public static string Label(IReadOnlyDictionary<string, string>? labels, string property) =>
+            labels != null && labels.TryGetValue(property, out var l) ? l : Label(property);
 
         public static string Format(ProductMasterValues v, string property)
         {

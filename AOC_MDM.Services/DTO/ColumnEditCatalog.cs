@@ -5,7 +5,11 @@ namespace AOC_MDM.Services.DTO
     public sealed record ManagedTable(string Key, string Label, string Group, string Controller,
         IReadOnlyList<ManagedColumn> Columns, string? RenameColumn = null);
 
-    public sealed record ColumnEditStatus(ManagedColumn Column, bool IsEditable, string? UpdatedBy, DateTime? UpdatedDate);
+    // DisplayName is the admin's label for the column; null means the built-in Column.Label
+    public sealed record ColumnEditStatus(ManagedColumn Column, bool IsEditable, string? DisplayName, string? UpdatedBy, DateTime? UpdatedDate)
+    {
+        public string Label => DisplayName ?? Column.Label;
+    }
 
     public sealed record TableEditStatus(ManagedTable Table, IReadOnlyList<ColumnEditStatus> Columns);
 

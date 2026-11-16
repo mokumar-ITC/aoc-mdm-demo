@@ -8,7 +8,7 @@ if (-not $env:PGPASSWORD) { throw "Set the PGPASSWORD environment variable to th
 
 Write-Host "== Reset and seed aoc_mdm" -ForegroundColor Cyan
 $scripts = '001_aoc_mdm_schema.sql', '004_hierarchy_integrity_and_users.sql', '005_demo_users.sql', '006_column_edit_settings.sql',
-           'reset_test_data.sql', '002_seed_test_data.sql', '003_publish_views.sql',
+           '009_column_display_names.sql', 'reset_test_data.sql', '002_seed_test_data.sql', '003_publish_views.sql',
            '007_product_master_schema.sql', '008_product_master_seed.sql'
 $args = @('-h', 'localhost', '-U', 'postgres', '-d', 'aoc_mdm', '-q', '-v', 'ON_ERROR_STOP=1')
 foreach ($s in $scripts) { $args += @('-f', "$root\db\postgres\$s") }
@@ -39,6 +39,9 @@ try {
     }
     # Gradian product master: maker / checker workflow
     python "$root\tests\e2e_product_master.py" http://localhost:5081 2
+    if ($LASTEXITCODE -ne 0) { $failed++ }
+    # Gradian product master: column display names, bulk update, bulk approve / reject
+    python "$root\tests\e2e_product_bulk.py" http://localhost:5081
     if ($LASTEXITCODE -ne 0) { $failed++ }
 }
 finally {
