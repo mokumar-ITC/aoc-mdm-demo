@@ -72,7 +72,8 @@ namespace AOC_MDM_MetaData_GUI.Controllers
         }
 
         private string SafeReturnUrl(string? returnUrl) =>
-            !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl : Url.Action("Index", "SpendArea")!;
+            !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl
+                : Url.Action("Index", _configuration.GetValue("Demo:ProductMasterOnly", true) ? "ProductMaster" : "SpendArea")!;
 
         // Demo:ShowDemoAccounts lists the accounts on the login page so a presenter can switch roles quickly
         private async Task SetDemoAccountsAsync()

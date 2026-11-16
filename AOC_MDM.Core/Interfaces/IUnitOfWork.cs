@@ -43,5 +43,7 @@
         IUserRoleRepository UserRoleRepository { get; }
         IHierarchyRepository HierarchyRepository { get; }
         IUserAccountRepository UserAccountRepository { get; }
+        IColumnEditSettingRepository ColumnEditSettingRepository { get; }
+        IProductMasterRepository ProductMasterRepository { get; }
     }
 }

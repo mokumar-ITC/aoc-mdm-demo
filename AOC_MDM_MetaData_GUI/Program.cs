@@ -84,7 +84,13 @@ var mapper = config.CreateMapper();
 builder.Services.AddSingleton(mapper);
 
 builder.Services.AddScoped<IUserAccountService, UserAccountService>();
+builder.Services.AddScoped<IColumnEditService, ColumnEditService>();
 builder.Services.AddScoped<IHierarchyService, HierarchyService>();
+builder.Services.AddScoped<IProductMasterService, ProductMasterService>();
+
+// Demo:ProductMasterOnly (default true): the menu shows only the Gradian Product Master and it is the home page;
+// the spend hierarchy and the vendor / item masters are hidden from the menu.
+var productMasterOnly = builder.Configuration.GetValue("Demo:ProductMasterOnly", true);
 
 // Authentication:Mode = "Forms" (login page, users in intranet.user_access) or "Windows" (Negotiate / SSO)
 if (string.Equals(builder.Configuration["Authentication:Mode"], "Windows", StringComparison.OrdinalIgnoreCase))
@@ -134,6 +140,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=SpendArea}/{action=Index}");      //"{controller=Home}/{action=Index}/{id?}");
+    pattern: productMasterOnly ? "{controller=ProductMaster}/{action=Index}" : "{controller=SpendArea}/{action=Index}");      //"{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

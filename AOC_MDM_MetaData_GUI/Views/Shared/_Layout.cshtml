@@ -1,6 +1,8 @@
-﻿@{
+﻿@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
     var userLevel = int.TryParse(User.FindFirst("LevelNo")?.Value, out var lvl) ? lvl : 4;
     var signedIn = User.Identity?.IsAuthenticated == true;
+    var productMasterOnly = Configuration.GetValue("Demo:ProductMasterOnly", true);
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -59,6 +61,26 @@
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item dropdown nav-box">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Product Master
+                            </a>
+                            <ul class="dropdown-menu bg-hd-cus">
+                                <li><a class="dropdown-item" asp-controller="ProductMaster" asp-action="Index" onclick="showloader()">Product Hierarchy</a></li>
+                                <li><a class="dropdown-item" asp-controller="ProductMaster" asp-action="Index" asp-route-status="Active" onclick="showloader()">Active Products</a></li>
+                                <li><a class="dropdown-item" asp-controller="ProductMaster" asp-action="Index" asp-route-approval="PendingApproval" onclick="showloader()">Pending Approval</a></li>
+                                @if (userLevel >= 3)
+                                {
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><h6 class="dropdown-header">Approvals</h6></li>
+                                    <li><a class="dropdown-item" asp-controller="ProductMaster" asp-action="Approvals" onclick="showloader()">Product Approval</a></li>
+                                }
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" asp-controller="ProductMaster" asp-action="Fields" onclick="showloader()">Field Dictionary</a></li>
+                            </ul>
+                        </li>
+                        @if (!productMasterOnly)
+                        {
+                        <li class="nav-item dropdown nav-box">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 Hierarchy
                             </a>
                             <ul class="dropdown-menu bg-hd-cus">
@@ -94,6 +116,7 @@
                                 <li><a class="dropdown-item" asp-controller="ItemRefAttrs" asp-action="Index" asp-route-pageNumber="1" asp-route-pageSize="25" asp-route-filterColumnName="level_3" asp-route-filterValue="__unmapped__" onclick="showloader()">Unmapped Items</a></li>
                             </ul>
                         </li>
+                        }
                         @if (userLevel >= 4)
                         {
                             <li class="nav-item dropdown nav-box">
@@ -102,6 +125,7 @@
                                 </a>
                                 <ul class="dropdown-menu bg-hd-cus">
                                     <li><a class="dropdown-item" asp-controller="Users" asp-action="Index" onclick="showloader()">Users &amp; Access</a></li>
+                                    <li><a class="dropdown-item" asp-controller="ColumnSettings" asp-action="Index" onclick="showloader()">Column Editing</a></li>
                                 </ul>
                             </li>
                         }

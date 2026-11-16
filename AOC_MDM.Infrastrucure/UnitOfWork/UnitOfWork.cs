@@ -38,6 +38,8 @@ namespace AOC_MDM.Infrastrucure.UnitOfWork
         UserRoleRepository _userRoleRepository;
         HierarchyRepository _hierarchyRepository;
         UserAccountRepository _userAccountRepository;
+        ColumnEditSettingRepository _columnEditSettingRepository;
+        ProductMasterRepository _productMasterRepository;
 
         public UnitOfWork(string connectionString, string catalog)
         {
@@ -98,6 +100,10 @@ namespace AOC_MDM.Infrastrucure.UnitOfWork
         public IHierarchyRepository HierarchyRepository => _hierarchyRepository ??= new HierarchyRepository(GetOrCreateConnection(), _catalog);
 
         public IUserAccountRepository UserAccountRepository => _userAccountRepository ??= new UserAccountRepository(GetOrCreateConnection(), _catalog);
+
+        public IColumnEditSettingRepository ColumnEditSettingRepository => _columnEditSettingRepository ??= new ColumnEditSettingRepository(GetOrCreateConnection(), _catalog);
+
+        public IProductMasterRepository ProductMasterRepository => _productMasterRepository ??= new ProductMasterRepository(GetOrCreateConnection(), _catalog);
 
 
         public void Dispose()
