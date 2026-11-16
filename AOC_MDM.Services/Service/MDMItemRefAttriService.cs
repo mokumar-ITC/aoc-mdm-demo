@@ -20,6 +20,7 @@ namespace AOC_MDM.Services.Service
         private readonly IMapper _mapper;
         private readonly ILogger<MDMItemRefAttriService> _logger;
         private readonly string _catalog;
+        private readonly IColumnEditService _columnEdit;
 
 
         public MDMItemRefAttriService(
@@ -27,6 +28,7 @@ namespace AOC_MDM.Services.Service
             IMapper mapper
              , ILogger<MDMItemRefAttriService> logger
              , DatabaseSettings dbSettings // Inject the catalog name via the settings object
+            , IColumnEditService columnEdit
 
      )
         {
@@ -34,6 +36,7 @@ namespace AOC_MDM.Services.Service
             _mapper = mapper;
             _logger = logger;
             _catalog = dbSettings.Catalog; // Store the catalog name
+            _columnEdit = columnEdit;
         }
 
         public async Task<MDMItemRefAttriApprovalDTO> GetApprovalAsync(string itemId, string source)
@@ -175,6 +178,8 @@ namespace AOC_MDM.Services.Service
         {
             try
             {
+                var currentRecord = await _unitOfWork.ItemRefAttributesRepository.GetSingleFilteredAsync($"item_id = '{itemId}' AND source = '{updatedRecord.Source}'");
+                if (currentRecord != null) await _columnEdit.KeepLockedValuesAsync(ColumnEditCatalog.Item, updatedRecord, currentRecord);
                 // Add an entry to the audit table for the request
                 var auditRecord = new MDMItemRefAttributesAudit
                 {
@@ -285,6 +290,8 @@ namespace AOC_MDM.Services.Service
                 };
 
                 //Update Main table
+                var currentRecord = await _unitOfWork.ItemRefAttributesRepository.GetSingleFilteredAsync($"item_id = '{auditRecord.ItemId}' AND source = '{auditRecord.Source}'");
+                if (currentRecord != null) await _columnEdit.KeepLockedValuesAsync(ColumnEditCatalog.Item, updatedRecord, currentRecord);
                 // await _unitOfWork.ItemRefAttributesRepository.UpdateAsync(updatedRecord, updatedRecord.ItemId, "item_id");
                 await _unitOfWork.ItemRefAttributesRepository.UpdateAsync(updatedRecord, updatedRecord.ItemId, "item_id", "source", auditRecord.Source);
 
@@ -336,6 +343,7 @@ namespace AOC_MDM.Services.Service
                 if (mainTableRecord != null)
                 {
 
+                    await _columnEdit.KeepLockedValuesAsync(ColumnEditCatalog.Item, updatedRecord, mainTableRecord);
                     mainTableRecord.ItemEnglishName = updatedRecord.ItemEnglishName;
                     mainTableRecord.CasNumber = updatedRecord.CasNumber;
                     mainTableRecord.ItemForm = updatedRecord.ItemForm;
@@ -422,6 +430,7 @@ namespace AOC_MDM.Services.Service
                     if (dbEntitiesDict.TryGetValue((uiEntity.ItemId, uiEntity.Source), out var existingEntity))
                     {
                         // Update only if the record exists  
+                        await _columnEdit.KeepLockedValuesAsync(ColumnEditCatalog.Item, uiEntity, existingEntity);
                         existingEntity.Level3 = uiEntity.Level3;
                         existingEntity.CurrentWavePlan = uiEntity.CurrentWavePlan;
                         existingEntity.AddressableSpend = uiEntity.AddressableSpend;

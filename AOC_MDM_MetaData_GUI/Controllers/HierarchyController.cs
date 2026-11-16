@@ -31,6 +31,7 @@ namespace AOC_MDM_MetaData_GUI.Controllers
             var impact = await _hierarchyService.GetImpactAsync(level, id);
             if (!impact.Exists) return NotFound();
             ViewBag.ListController = ListControllers[level];
+            ViewBag.RenameLocked = await HttpContext.RequestServices.GetRequiredService<IColumnEditService>().IsRenameLockedAsync(level);
             return View(impact);
         }
 

@@ -8,6 +8,7 @@ so one running app instance covers every role. Start the app, then:
     python tests/e2e_workflow.py admin        # admin1: direct edit, enable/disable
     python tests/e2e_workflow.py maker        # maker1: submit vendor changes for approval
     python tests/e2e_workflow.py checker      # checker1: approve one request (with comment), reject the other
+    python tests/e2e_workflow.py columns      # column locks on every table and write path
     python tests/e2e_workflow.py hierarchy    # admin1: rename cascade, duplicate check, cascade disable, delete, history
 Or run everything on fresh data:  tests/run_e2e.ps1
 """
@@ -23,6 +24,7 @@ from html.parser import HTMLParser
 BASE = os.environ.get("MDM_URL", "http://localhost:5081")
 PSQL = os.environ.get("PSQL", r"C:\Program Files\PostgreSQL\18\bin\psql.exe")
 PGENV = dict(os.environ)  # psql reads PGPASSWORD from the environment
+DATABASE = os.environ.get("MDM_DB", "aoc_mdm")
 
 jar = http.cookiejar.CookieJar()
 
@@ -43,7 +45,7 @@ def check(ok, msg):
 
 
 def request(path, data=None):
-    body = urllib.parse.urlencode(data).encode() if data is not None else None
+    body = urllib.parse.urlencode(data, doseq=True).encode() if data is not None else None
     try:
         with opener.open(urllib.request.Request(BASE + path, data=body)) as r:
             return r.status, r.read().decode("utf-8", "replace"), r.headers.get("Location")
@@ -64,7 +66,7 @@ def login(user, password=DEMO_PASSWORD):
 
 
 def sql(query):
-    out = subprocess.run([PSQL, "-h", "localhost", "-U", "postgres", "-d", "aoc_mdm", "-At", "-F", "|", "-c", query],
+    out = subprocess.run([PSQL, "-h", "localhost", "-U", "postgres", "-d", DATABASE, "-At", "-F", "|", "-c", query],
                          capture_output=True, text=True, env=PGENV, check=True)
     return [line.split("|") for line in out.stdout.strip().splitlines() if line]
 
@@ -318,8 +320,252 @@ def hierarchy():
           "History shows the rename and delete by admin1")
 
 
+# ---------------------------------------------------------------------------------------------
+# Column locks. Each entry: admin table key -> database table, URL prefix, form field -> database column.
+LOCKABLE = {
+    "vendor": ("mdm.vendor_reference_attributes", "/VendorRefAttri", {
+        "SupplierVendor": "supplier_vendor", "VendorEnglishName": "vendor_english_name", "VendorFamilyName": "vendor_family_name",
+        "Level3": "level_3", "ParentCompany": "parent_company", "AddressableSpend": "addressable_spend",
+        "PayablesVeryImportantSupplier": "payables_very_important_supplier", "Intercompany": "intercompany",
+        "IndirectSpendOwner": "indirect_spend_owner"}),
+    "item": ("mdm.item_reference_attributes", "/ItemRefAttrs", {
+        "ItemEnglishName": "item_english_name", "CasNumber": "cas_number", "ItemForm": "item_form", "Level3": "level_3",
+        "AddressableSpend": "addressable_spend", "MaterialCriticalityBasedOnRevenue": "material_criticality_based_on_revenue",
+        "CurrentWavePlan": "current_wave_plan"}),
+    "itemsupplier": ("mdm.item_supplier_reference_attributes", "/ItemSupplierRefAttri", {
+        "RiskTransfer": "risk_transfer", "SupplierSpecificRequirements": "supplier_specific_requirements",
+        "FormulaNonFormula": "formula_non_formula"}),
+    "spendarea": ("mdm.spend_area", "/SpendArea", {"Enabled": "enabled"}),
+    "team": ("mdm.team", "/Team", {"SpendArea": "spend_area", "Enabled": "enabled"}),
+    "level1": ("mdm.aoc_level_1", "/AOCLevel1", {"Team": "team", "Enabled": "enabled"}),
+    "level2": ("mdm.aoc_level_2", "/AOCLevel2", {"Level1": "level_1", "Enabled": "enabled"}),
+    "level3": ("mdm.aoc_level_3", "/AOCLevel3", {
+        "Level2": "level_2", "Feedstock1": "feedstock_1", "Feedstock2": "feedstock_2", "Feedstock3": "feedstock_3",
+        "Hazardous": "hazardous", "ConflictMineralForcedLaborRegCheck": "conflict_mineral_forced_labor_reg_check", "Enabled": "enabled"}),
+}
+# Bulk rows are matched back to the database by these form field -> column pairs
+BULK_KEYS = {
+    "vendor": {"VendorId": "vendor_id", "Source": "source"}, "item": {"ItemId": "item_id", "Source": "source"},
+    "itemsupplier": {"ItemId": "item_id", "VendorId": "vendor_id", "Source": "source"},
+    "spendarea": {"spend_area": "spend_area"}, "team": {"Team": "team"}, "level1": {"Level1": "level_1"},
+    "level2": {"Level2": "level_2"}, "level3": {"Level3": "level_3"},
+}
+HIERARCHY_NAME = {"spendarea": "spend_area", "team": "team", "level1": "level_1", "level2": "level_2", "level3": "level_3"}
+
+
+def q(value):
+    return urllib.parse.quote(value or "x")
+
+
+def lock_columns(table, locked=()):
+    """Admin page: saves one table with only the given columns locked; "*" locks them all."""
+    status, html, _ = request("/ColumnSettings/Index")
+    block = html.split(f'name="tableKey" value="{table}"')[1].split("</form>")[0]
+    columns = re.findall(r'name="editable" value="([^"]+)"', block)
+    editable = [] if locked == "*" else [c for c in columns if c not in locked]
+    token = form(html, "/ColumnSettings/Save")["__RequestVerificationToken"]
+    status, _, _ = request("/ColumnSettings/Save", {"tableKey": table, "editable": editable, "__RequestVerificationToken": token})
+    check(status == 302, f"Admin saved {table} with locked={locked or 'none'} -> {status}")
+
+
+def edit_target(table):
+    """(edit page URL, WHERE clause) for one seeded row of the table."""
+    if table == "vendor":
+        return "/VendorRefAttri/Edit?id=V1001&Source=sql_db&VendorName=x&VendorNumber=x&SpendArea=x", "vendor_id='V1001' AND source='sql_db'"
+    if table == "item":
+        return "/ItemRefAttrs/Edit?id=I2001&ItemNo=x&ItemDescription=x&Source=sql_db", "item_id='I2001' AND source='sql_db'"
+    if table == "itemsupplier":
+        return ("/ItemSupplierRefAttri/Edit?id=I2001&VendorName=x&ItemDescription=x&ItemNo=x&VendorId=V1001&Source=sql_db&SpendArea=x",
+                "item_id='I2001' AND vendor_id='V1001' AND source='sql_db'")
+    column = HIERARCHY_NAME[table]
+    name = sql(f"SELECT {column} FROM {LOCKABLE[table][0]} WHERE enabled='Yes' ORDER BY 1 LIMIT 1")[0][0]
+    where = f"{column}='{name}'"
+    prefix = LOCKABLE[table][1]
+    query = {"spendarea": f"id={q(name)}", "team": f"id={q(name)}", "level1": f"id={q(name)}&SpendArea=x",
+             "level2": f"id={q(name)}&spendArea=x&team=x", "level3": f"Id={q(name)}&level1=x&spendArea=x&team=x"}[table]
+    return f"{prefix}/Edit?{query}", where
+
+
+def post_url(table, edit_url):
+    """The Edit form posts to its own controller with the record id in the query string."""
+    prefix = LOCKABLE[table][1]
+    value = re.search(r"[?&][iI]d=([^&]*)", edit_url).group(1)
+    return f"{prefix}/Edit?id={value}"
+
+
+def row_values(table, where):
+    columns = ", ".join(LOCKABLE[table][2].values())
+    return sql(f"SELECT {columns} FROM {LOCKABLE[table][0]} WHERE {where}")[0]
+
+
+def field_tag(html, name):
+    match = re.search(r'<(?:input|select)\b[^>]*\bname="' + re.escape(name) + r'"[^>]*>', html)
+    return match.group(0) if match else ""
+
+
+def tampered(field, current):
+    return ("No" if current == "Yes" else "Yes") if field == "Enabled" else "TAMPERED"
+
+
+def submit_edit(table, changes=None, drop=()):
+    url, where = edit_target(table)
+    status, html, _ = request(url)
+    check(status == 200, f"{table}: GET edit page -> {status}")
+    fields = form(html, f"{LOCKABLE[table][1]}/Edit")
+    fields.update(changes or {})
+    for name in drop:
+        fields.pop(name, None)
+    return request(post_url(table, url), fields), where, html
+
+
+def pending_audit(table, where):
+    return sql(f"SELECT max(auditid) FROM {LOCKABLE[table][0]}_audit WHERE {where} AND approvalstatus='PendingApproval'")[0][0]
+
+
+def approve_pending(table, where):
+    audit_id = pending_audit(table, where)
+    status, _, location = request(f"{LOCKABLE[table][1]}/Approved?id={audit_id}", {"auditId": audit_id, "Remarks": "e2e column lock"})
+    check(status == 302 and "Error" not in (location or ""), f"{table}: checker approved audit {audit_id} -> {status} {location}")
+
+
+def columns():
+    print("== Column locks: access")
+    for user in ("viewer1", "maker1", "checker1"):
+        login(user)
+        check(denied("/ColumnSettings/Index"), f"{user} cannot open the Column Editing page")
+    login("admin1")
+    sql_exec("TRUNCATE mdm.column_edit_setting")
+    status, html, _ = request("/ColumnSettings/Index")
+    check(status == 200 and "Column Editing" in html, f"Admin opens the Column Editing page -> {status}")
+    token = form(html, "/ColumnSettings/Save")["__RequestVerificationToken"]
+    status, _, _ = request("/ColumnSettings/Save", {"tableKey": "nope", "editable": ["x"], "__RequestVerificationToken": token})
+    check(status == 404, f"Unknown table is rejected -> {status}")
+    status, _, _ = request("/ColumnSettings/Save", {"tableKey": "vendor", "__RequestVerificationToken": ""})
+    check(status == 400, f"Save without an antiforgery token is rejected -> {status}")
+
+    print("== Column locks: nothing locked by default")
+    (status, _, _), where, html = submit_edit("vendor", {"IndirectSpendOwner": "Unlocked Owner"})
+    check(sql(f"SELECT indirect_spend_owner FROM mdm.vendor_reference_attributes WHERE {where}")[0][0] == "Unlocked Owner",
+          "With no locks, an edit still saves")
+    check("readonly" not in field_tag(html, "ParentCompany"), "With no locks, fields are editable")
+
+    print("== Column locks: every table, all columns locked")
+    for table in LOCKABLE:
+        lock_columns(table, "*")
+        url, where = edit_target(table)
+        before = row_values(table, where)
+        _, page, _ = request(url)
+        for field in LOCKABLE[table][2]:
+            tag = field_tag(page, field)
+            check("readonly" in tag or "disabled" in tag, f"{table}.{field} is shown locked on the Edit page")
+        current = dict(zip(LOCKABLE[table][2], before))
+        changes = {f: tampered(f, current[f]) for f in LOCKABLE[table][2]}
+        (status, _, location), where, _ = submit_edit(table, changes)
+        check(status == 302 and "Error" not in (location or ""), f"{table}: tampered edit -> {status} {location}")
+        check(row_values(table, where) == before, f"{table}: tampered edit changed nothing")
+
+        (status, _, location), _, _ = submit_edit(table, drop=list(LOCKABLE[table][2]))
+        check(status == 302, f"{table}: edit with locked fields missing (disabled selects) -> {status}")
+        check(row_values(table, where) == before, f"{table}: missing locked fields did not blank the stored values")
+
+        status, page, _ = request(f"{LOCKABLE[table][1]}/BulkUpdate")
+        check(status == 200, f"{table}: GET bulk page -> {status}")
+        fields = form(page, f"{LOCKABLE[table][1]}/BulkUpdate")
+        where = " AND ".join(f"{column}='{fields[f'Items[0].{field}']}'" for field, column in BULK_KEYS[table].items())
+        before = row_values(table, where)
+        current = dict(zip(LOCKABLE[table][2], before))
+        for field in LOCKABLE[table][2]:
+            tag = field_tag(page, f"Items[0].{field}")
+            check(tag == "" or "readonly" in tag or "disabled" in tag, f"{table}.{field} is shown locked on the Bulk page")
+            fields[f"Items[0].{field}"] = tampered(field, current[field])
+        fields["Items[0].IsSelected"] = "true"
+        status, _, location = request(f"{LOCKABLE[table][1]}/BulkUpdate", fields)
+        check(status == 302, f"{table}: tampered bulk save -> {status} {location}")
+        check(row_values(table, where) == before, f"{table}: tampered bulk save changed nothing")
+
+    print("== Column locks: hierarchy Enable and Rename are refused")
+    for table, column in HIERARCHY_NAME.items():
+        _, where = edit_target(table)
+        name = sql(f"SELECT {column} FROM {LOCKABLE[table][0]} WHERE {where}")[0][0]
+        before = row_values(table, where)
+        status, _, location = request(f"{LOCKABLE[table][1]}/Enable?id={q(name)}")
+        check(status == 302 and row_values(table, where) == before, f"{table}: Enable is refused while Enabled is locked")
+        _, page, _ = request(f"{LOCKABLE[table][1]}/Index")
+        check("Enabled column is locked" in page, f"{table}: the refusal is explained to the user")
+        status, page, _ = request(f"/Hierarchy/Manage?level={table}&id={q(name)}")
+        check(status == 200 and "Renaming is locked" in page and "/Hierarchy/Rename" not in page,
+              f"{table}: Manage page hides Rename while the name is locked")
+        token = form(request("/ColumnSettings/Index")[1], "/ColumnSettings/Save")["__RequestVerificationToken"]
+        request("/Hierarchy/Rename", {"level": table, "id": name, "newName": name + " RENAMED", "__RequestVerificationToken": token})
+        check(sql(f"SELECT count(*) FROM {LOCKABLE[table][0]} WHERE {where}")[0][0] == "1", f"{table}: a direct Rename post changes nothing")
+
+    print("== Column locks: only the locked column is held back")
+    for table in LOCKABLE:
+        lock_columns(table)
+    for table, locked, free in [("vendor", "ParentCompany", "IndirectSpendOwner"),
+                                ("item", "CasNumber", "ItemEnglishName"),
+                                ("itemsupplier", "RiskTransfer", "SupplierSpecificRequirements"),
+                                ("level3", "Feedstock1", "Feedstock2")]:
+        lock_columns(table, [locked])
+        main, locked_column, free_column = LOCKABLE[table][0], LOCKABLE[table][2][locked], LOCKABLE[table][2][free]
+        _, where = edit_target(table)
+        before = sql(f"SELECT {locked_column} FROM {main} WHERE {where}")[0]
+        (status, _, _), where, html = submit_edit(table, {locked: "TAMPERED", free: "Partly Locked"})
+        check(status == 302, f"{table}: partial edit -> {status}")
+        check(sql(f"SELECT {locked_column} FROM {main} WHERE {where}")[0] == before, f"{table}.{locked} kept its value")
+        check(sql(f"SELECT {free_column} FROM {main} WHERE {where}")[0][0] == "Partly Locked", f"{table}.{free} still saved")
+        check("readonly" in field_tag(html, locked) and "readonly" not in field_tag(html, free), f"{table}: only {locked} is shown locked")
+        lock_columns(table)
+
+    print("== Column locks: approval workflow")
+    for table, locked, free in [("vendor", "ParentCompany", "IndirectSpendOwner"),
+                                ("item", "CasNumber", "ItemEnglishName"),
+                                ("itemsupplier", "RiskTransfer", "SupplierSpecificRequirements")]:
+        main, locked_column, free_column = LOCKABLE[table][0], LOCKABLE[table][2][locked], LOCKABLE[table][2][free]
+
+        # Locked before the maker submits: the request cannot carry a new value for the column
+        login("admin1")
+        lock_columns(table, [locked])
+        _, where = edit_target(table)
+        current = sql(f"SELECT {locked_column} FROM {main} WHERE {where}")[0][0]
+        login("maker1")
+        (status, _, _), where, _ = submit_edit(table, {locked: "TAMPERED", free: "Maker Value"})
+        check(status == 302, f"{table}: maker request with a locked column -> {status}")
+        audit = sql(f"SELECT {locked_column}, {free_column} FROM {main}_audit WHERE auditid={pending_audit(table, where)}")[0]
+        check(audit == [current, "Maker Value"], f"{table}: pending request holds the stored {locked} and the new {free} -> {audit}")
+        login("checker1")
+        approve_pending(table, where)
+        check(sql(f"SELECT {locked_column}, {free_column} FROM {main} WHERE {where}")[0] == [current, "Maker Value"],
+              f"{table}: approval applied {free} and kept {locked}")
+
+        # Locked after the maker submits: approval must not apply the old request's value
+        login("admin1")
+        lock_columns(table)
+        login("maker1")
+        (status, _, _), where, _ = submit_edit(table, {locked: "Stale Value", free: "Applied Value"})
+        check(status == 302, f"{table}: maker request before the lock -> {status}")
+        login("admin1")
+        lock_columns(table, [locked])
+        login("checker1")
+        approve_pending(table, where)
+        check(sql(f"SELECT {locked_column}, {free_column} FROM {main} WHERE {where}")[0] == [current, "Applied Value"],
+              f"{table}: a request made before the lock did not overwrite {locked}")
+        audit_page = {"vendor": "VendorAudit", "item": "ItemAudit", "itemsupplier": "ItemSupplierAudit"}[table]
+        _, page, _ = request(f"{LOCKABLE[table][1]}/{audit_page}")
+        check("Locked columns were not changed" in page, f"{table}: the checker is told the locked column was kept")
+
+        login("admin1")
+        lock_columns(table)
+
+    print("== Column locks: who changed a setting is recorded")
+    lock_columns("vendor", ["ParentCompany"])
+    row = sql("SELECT is_editable, updated_by FROM mdm.column_edit_setting WHERE table_key='vendor' AND column_key='ParentCompany'")[0]
+    check(row[1] == "admin1" and row[0] in ("f", "false"), f"The lock records who set it -> {row}")
+    sql_exec("TRUNCATE mdm.column_edit_setting")
+
+
 def sql_exec(query):
-    subprocess.run([PSQL, "-h", "localhost", "-U", "postgres", "-d", "aoc_mdm", "-q", "-c", query],
+    subprocess.run([PSQL, "-h", "localhost", "-U", "postgres", "-d", DATABASE, "-q", "-c", query],
                    capture_output=True, text=True, env=PGENV, check=True)
 
 
@@ -329,6 +575,6 @@ if __name__ == "__main__":
     if user:
         signed_in, _ = login(user)
         check(signed_in, f"signed in as {user}")
-    {"smoke": smoke, "admin": admin, "maker": maker, "checker": checker, "access": access, "hierarchy": hierarchy}[phase]()
+    {"smoke": smoke, "admin": admin, "maker": maker, "checker": checker, "access": access, "hierarchy": hierarchy, "columns": columns}[phase]()
     print(f"\n{'ALL PASSED' if failures == 0 else f'{failures} FAILURE(S)'}")
     sys.exit(1 if failures else 0)

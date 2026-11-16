@@ -17,18 +17,21 @@ namespace AOC_MDM.Services.Service
         private readonly IMapper _mapper;
         private readonly ILogger<MDMAOCLevel1Service> _logger;
         private readonly string _catalog;
+        private readonly IColumnEditService _columnEdit;
 
         public MDMAOCLevel1Service(
             IUnitOfWork unitOfWork,
             IMapper mapper
             , ILogger<MDMAOCLevel1Service> logger
             , DatabaseSettings dbSettings // Inject the catalog name via the settings object
+            , IColumnEditService columnEdit
 
             )
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _catalog = dbSettings.Catalog; // Store the catalog name
+            _columnEdit = columnEdit;
             _logger = logger;
         }
 
@@ -189,6 +192,8 @@ namespace AOC_MDM.Services.Service
             try
             {
 
+                var currentRecord = await GetFilteredAsync(updatedRecord.Level1);
+                if (currentRecord != null) await _columnEdit.KeepLockedValuesAsync(ColumnEditCatalog.Level1, updatedRecord, currentRecord);
                 // Update the main table
                 updatedRecord.UpdatedBy = checkerId;
                 updatedRecord.UpdatedDate = DateTime.UtcNow;
@@ -230,6 +235,7 @@ namespace AOC_MDM.Services.Service
                     if (dbEntitiesDict.TryGetValue(uiEntity.Level1, out var existingEntity))
                     {
                         // Update only if a record exists
+                        await _columnEdit.KeepLockedValuesAsync(ColumnEditCatalog.Level1, uiEntity, existingEntity);
                         existingEntity.Team = uiEntity.Team;
                         existingEntity.Enabled = uiEntity.Enabled;
 

@@ -98,15 +98,23 @@ namespace AOC_MDM.Services.Service
     {
         private readonly IUnitOfWork _unitOfWork;
 
-        public HierarchyService(IUnitOfWork unitOfWork)
+        private readonly IColumnEditService _columnEdit;
+
+        public HierarchyService(IUnitOfWork unitOfWork, IColumnEditService columnEdit)
         {
             _unitOfWork = unitOfWork;
+            _columnEdit = columnEdit;
         }
 
         public Task<HierarchyImpact> GetImpactAsync(string level, string name) => _unitOfWork.HierarchyRepository.GetImpactAsync(level, name);
 
-        public Task RenameAsync(string level, string oldName, string newName, string userName) =>
-            _unitOfWork.HierarchyRepository.RenameAsync(level, oldName, newName, userName);
+        public async Task RenameAsync(string level, string oldName, string newName, string userName)
+        {
+            if (await _columnEdit.IsRenameLockedAsync(level))
+                throw new InvalidOperationException("Renaming is locked by an administrator (Administration > Column Editing).");
+
+            await _unitOfWork.HierarchyRepository.RenameAsync(level, oldName, newName, userName);
+        }
 
         public Task DeleteAsync(string level, string name, string userName) =>
             _unitOfWork.HierarchyRepository.DeleteAsync(level, name, userName);

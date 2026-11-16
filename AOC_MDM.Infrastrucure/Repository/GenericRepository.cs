@@ -1157,6 +1157,7 @@ WHERE {columnName} = '{columnValue.Replace("'", "''")}'";
         #region Helper Methods for Property Reflection Cache
         // Cache entity property metadata to improve performance
         private static readonly ConcurrentDictionary<Type, List<PropertyMapping>> _propertyCache = new();
+        private static readonly ConcurrentDictionary<Type, List<PropertyMapping>> _propertyCacheIncludingPK = new();
 
         private List<PropertyMapping> GetCachedProperties(Type type)
         {
@@ -1185,7 +1186,7 @@ WHERE {columnName} = '{columnValue.Replace("'", "''")}'";
 
         private List<PropertyMapping> GetCachedPropertiesIncludingPK(Type type)
         {
-            if (_propertyCache.TryGetValue(type, out var cachedProperties))
+            if (_propertyCacheIncludingPK.TryGetValue(type, out var cachedProperties))
                 return cachedProperties;
 
             // Process metadata for caching
@@ -1204,7 +1205,7 @@ WHERE {columnName} = '{columnValue.Replace("'", "''")}'";
                                  //.Where(p => !p.IsKey) // Exclude keys
                                  .ToList();
 
-            _propertyCache[type] = properties;
+            _propertyCacheIncludingPK[type] = properties;
             return properties;
         }
 
@@ -1490,7 +1491,7 @@ WHERE {columnName} = '{columnValue.Replace("'", "''")}'";
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
 
-            var property = GetCachedProperties(typeof(T))
+            var property = GetCachedPropertiesIncludingPK(typeof(T))
                             .FirstOrDefault(p => p.ColumnName.Equals(primaryKeyColumn, StringComparison.OrdinalIgnoreCase));
 
             if (property == null)

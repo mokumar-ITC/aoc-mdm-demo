@@ -10,6 +10,8 @@ TRUNCATE mdm.vendor_reference_attributes_audit,
 
 TRUNCATE mdm.hierarchy_audit RESTART IDENTITY;
 
+TRUNCATE mdm.column_edit_setting;
+
 TRUNCATE mdm.vendor_reference_attributes,
          mdm.item_reference_attributes,
          mdm.item_supplier_reference_attributes,

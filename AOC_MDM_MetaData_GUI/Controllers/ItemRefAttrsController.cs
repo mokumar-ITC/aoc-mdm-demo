@@ -260,7 +260,8 @@ namespace AOC_MDM_MetaData_GUI.Controllers
             if (result)
             {
                 _logger.LogInformation($"Ending ItemRefAttrsController Approved method result:{result}");
-                TempData["alertMessage"] = "Item approval successful! The item is now active in the system.";
+                TempData["alertMessage"] = "Item approval successful! The item is now active in the system."
+                    + await HttpContext.RequestServices.GetRequiredService<IColumnEditService>().DescribeLockedForApprovalAsync("item");
                 return RedirectToAction(nameof(ItemAudit));
             }
             else { return View(); }

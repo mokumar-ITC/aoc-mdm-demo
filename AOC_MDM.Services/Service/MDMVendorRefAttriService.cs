@@ -19,12 +19,14 @@ namespace AOC_MDM.Services.Service
         private readonly IMapper _mapper;
         private readonly ILogger<MDMVendorRefAttriService> _logger;
         private readonly string _catalog;
+        private readonly IColumnEditService _columnEdit;
 
         public MDMVendorRefAttriService(
             IUnitOfWork unitOfWork,
             IMapper mapper
            , ILogger<MDMVendorRefAttriService> logger
            , DatabaseSettings dbSettings // Inject the catalog name via the settings object
+            , IColumnEditService columnEdit
 
      )
         {
@@ -32,6 +34,7 @@ namespace AOC_MDM.Services.Service
             _mapper = mapper;
             _logger = logger;
             _catalog = dbSettings.Catalog; // Store the catalog name
+            _columnEdit = columnEdit;
         }
 
         /// <summary>
@@ -292,6 +295,8 @@ namespace AOC_MDM.Services.Service
         {
             try
             {
+                var currentRecord = await _unitOfWork.VendorRefAttributesRepository.GetSingleFilteredAsync($"vendor_id = '{vendorId}' AND source = '{updatedRecord.Source}'");
+                if (currentRecord != null) await _columnEdit.KeepLockedValuesAsync(ColumnEditCatalog.Vendor, updatedRecord, currentRecord);
                 // Add an entry to the audit table for the request
                 var auditRecord = new MDMVendorRefAttributesAudit
                 {
@@ -406,6 +411,8 @@ namespace AOC_MDM.Services.Service
                     LastModifiedByRole = "Checker",
                     Remarks = remarks
                 };
+                var currentRecord = await _unitOfWork.VendorRefAttributesRepository.GetSingleFilteredAsync($"vendor_id = '{auditRecord.VendorId}' AND source = '{auditRecord.Source}'");
+                if (currentRecord != null) await _columnEdit.KeepLockedValuesAsync(ColumnEditCatalog.Vendor, updatedRecord, currentRecord);
                 //  await _unitOfWork.VendorRefAttributesRepository.UpdateAsync(updatedRecord, updatedRecord.VendorId, "vendor_id");
                 await _unitOfWork.VendorRefAttributesRepository.UpdateAsync(updatedRecord, updatedRecord.VendorId, "vendor_id", "source", updatedRecord.Source);
 
@@ -456,6 +463,7 @@ namespace AOC_MDM.Services.Service
 
                 if (mainTableRecord != null)
                 {
+                    await _columnEdit.KeepLockedValuesAsync(ColumnEditCatalog.Vendor, updatedRecord, mainTableRecord);
                     mainTableRecord.SupplierVendor = updatedRecord.SupplierVendor;
                     mainTableRecord.VendorEnglishName = updatedRecord.VendorEnglishName;
                     mainTableRecord.VendorFamilyName = updatedRecord.VendorFamilyName;
@@ -535,6 +543,7 @@ namespace AOC_MDM.Services.Service
                     if (dbEntitiesDict.TryGetValue((uiEntity.VendorId, uiEntity.Source), out var existingEntity))
                     {
                         // Update only if the record exists  
+                        await _columnEdit.KeepLockedValuesAsync(ColumnEditCatalog.Vendor, uiEntity, existingEntity);
                         existingEntity.Level3 = uiEntity.Level3;
                         existingEntity.AddressableSpend = uiEntity.AddressableSpend;
                         existingEntity.VendorEnglishName = uiEntity.VendorEnglishName;

@@ -15,12 +15,14 @@ namespace AOC_MDM.Services.Service
         private readonly IMapper _mapper;
         private readonly ILogger<MDMTeamService> _logger;
         private readonly string _catalog;
+        private readonly IColumnEditService _columnEdit;
 
         public MDMTeamService(
             IUnitOfWork unitOfWork,
             IMapper mapper
             , ILogger<MDMTeamService> logger
             , DatabaseSettings dbSettings // Inject the catalog name via the settings object
+            , IColumnEditService columnEdit
 
 
             )
@@ -29,6 +31,7 @@ namespace AOC_MDM.Services.Service
             _mapper = mapper;
             _logger = logger;
             _catalog = dbSettings.Catalog; // Store the catalog name
+            _columnEdit = columnEdit;
         }
 
         public async Task<IEnumerable<MDMTeamDTO>> GetTeamsAsync()
@@ -104,6 +107,8 @@ namespace AOC_MDM.Services.Service
             try
             {
 
+                var currentRecord = await GetFilteredAsync(updatedRecord.Team);
+                if (currentRecord != null) await _columnEdit.KeepLockedValuesAsync(ColumnEditCatalog.Team, updatedRecord, currentRecord);
                 // Update the main table
                 updatedRecord.UpdatedBy = checkerId;
                 updatedRecord.UpdatedDate = DateTime.UtcNow;
@@ -148,6 +153,7 @@ namespace AOC_MDM.Services.Service
                     if (dbEntitiesDict.TryGetValue(uiEntity.Team, out var existingEntity))
                     {
                         // Update only if a record exists
+                        await _columnEdit.KeepLockedValuesAsync(ColumnEditCatalog.Team, uiEntity, existingEntity);
                         existingEntity.SpendArea = uiEntity.SpendArea;
                         existingEntity.Enabled = uiEntity.Enabled;
 

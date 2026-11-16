@@ -17,6 +17,7 @@ namespace AOC_MDM.Services.Service
         private readonly IMapper _mapper;
         private readonly ILogger<MDMAOCLevel3Service> _logger;
         private readonly string _catalog;
+        private readonly IColumnEditService _columnEdit;
 
 
         public MDMAOCLevel3Service(
@@ -24,6 +25,7 @@ namespace AOC_MDM.Services.Service
             IMapper mapper
              , ILogger<MDMAOCLevel3Service> logger
          , DatabaseSettings dbSettings // Inject the catalog name via the settings object
+            , IColumnEditService columnEdit
 
             )
         {
@@ -31,6 +33,7 @@ namespace AOC_MDM.Services.Service
             _mapper = mapper;
             _logger = logger;
             _catalog = dbSettings.Catalog; // Store the catalog name
+            _columnEdit = columnEdit;
         }
 
         public async Task<IEnumerable<MDMAOCLevel3DTO>> GetAOCLevel3sAsync()
@@ -149,6 +152,8 @@ namespace AOC_MDM.Services.Service
             try
             {
 
+                var currentRecord = await GetFilteredAsync(updatedRecord.Level3);
+                if (currentRecord != null) await _columnEdit.KeepLockedValuesAsync(ColumnEditCatalog.Level3, updatedRecord, currentRecord);
                 // Update the main table
                 updatedRecord.UpdatedBy = checkerId;
                 updatedRecord.UpdatedDate = DateTime.UtcNow;
@@ -189,6 +194,7 @@ namespace AOC_MDM.Services.Service
                     if (dbEntitiesDict.TryGetValue(uiEntity.Level3, out var existingEntity))
                     {
                         // Update only if a record exists
+                        await _columnEdit.KeepLockedValuesAsync(ColumnEditCatalog.Level3, uiEntity, existingEntity);
                         existingEntity.Level2 = uiEntity.Level2;
                         existingEntity.Feedstock1 = uiEntity.Feedstock1;
                         existingEntity.Feedstock2 = uiEntity.Feedstock2;

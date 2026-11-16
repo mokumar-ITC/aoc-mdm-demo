@@ -13,6 +13,7 @@ namespace AOC_MDM_MetaData_GUI.Controllers
     public class AOCLevel1Controller : Controller
     {
         private IHierarchyService HierarchyService => HttpContext.RequestServices.GetRequiredService<IHierarchyService>();
+        private IColumnEditService ColumnEdit => HttpContext.RequestServices.GetRequiredService<IColumnEditService>();
 
         private readonly IMDMAOCLevel1Service _mdmLevel1Service;
         private readonly IMDMTeamService _mdmTeamService;
@@ -172,6 +173,12 @@ namespace AOC_MDM_MetaData_GUI.Controllers
         [RoleRequirement(3)] //3 => Approver or above (min role)
         public async Task<ActionResult> Enable(string id)
         {
+            if (await ColumnEdit.IsLockedAsync("level1", "Enabled"))
+            {
+                TempData["errorMessage"] = "The Enabled column is locked by an administrator (Administration > Column Editing).";
+                return RedirectToAction(nameof(Index));
+            }
+            
             var res = await _mdmLevel1Service.GetFilteredAsync(id);
 
             var username = _userRoleService.CurrentUserName;

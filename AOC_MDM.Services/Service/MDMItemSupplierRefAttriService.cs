@@ -18,12 +18,14 @@ namespace AOC_MDM.Services.Service
         private readonly IMapper _mapper;
         private readonly ILogger<MDMItemSupplierRefAttriService> _logger;
         private readonly string _catalog;
+        private readonly IColumnEditService _columnEdit;
 
         public MDMItemSupplierRefAttriService(
             IUnitOfWork unitOfWork,
             IMapper mapper
              , ILogger<MDMItemSupplierRefAttriService> logger
          , DatabaseSettings dbSettings // Inject the catalog name via the settings object
+            , IColumnEditService columnEdit
 
      )
         {
@@ -31,6 +33,7 @@ namespace AOC_MDM.Services.Service
             _mapper = mapper;
             _logger = logger;
             _catalog = dbSettings.Catalog; // Store the catalog name
+            _columnEdit = columnEdit;
         }
 
         public async Task<MDMItemSupplierRefAttriApprovalDTO> GetApprovalAsync(string itemId, string vendorId, string source)
@@ -134,6 +137,8 @@ namespace AOC_MDM.Services.Service
         {
             try
             {
+                var currentRecord = await _unitOfWork.ItemSupplierRefAttributesRepository.GetSingleFilteredAsync($"item_id = '{itemId}' AND vendor_id = '{updatedRecord.VendorId}' AND source = '{updatedRecord.Source}'");
+                if (currentRecord != null) await _columnEdit.KeepLockedValuesAsync(ColumnEditCatalog.ItemSupplier, updatedRecord, currentRecord);
                 // Add an entry to the audit table for the request
                 var auditRecord = new MDMItemSupplierRefAttributesAudit
                 {
@@ -204,6 +209,7 @@ namespace AOC_MDM.Services.Service
                 if (mainTableRecord != null)
                 {
 
+                    await _columnEdit.KeepLockedValuesAsync(ColumnEditCatalog.ItemSupplier, updatedRecord, mainTableRecord);
                     mainTableRecord.Source = updatedRecord.Source;
                     mainTableRecord.ItemId = updatedRecord.ItemId;
                     mainTableRecord.VendorId = updatedRecord.VendorId;
@@ -275,6 +281,7 @@ namespace AOC_MDM.Services.Service
                         // Update only if the record exists  
                         //existingEntity.Source = uiEntity.Source;
                         //existingEntity.VendorId = uiEntity.VendorId;
+                        await _columnEdit.KeepLockedValuesAsync(ColumnEditCatalog.ItemSupplier, uiEntity, existingEntity);
                         existingEntity.RiskTransfer = uiEntity.RiskTransfer;
                         existingEntity.SupplierSpecificRequirements = uiEntity.SupplierSpecificRequirements;
                         existingEntity.FormulaNonFormula = uiEntity.FormulaNonFormula;
@@ -330,6 +337,8 @@ namespace AOC_MDM.Services.Service
                     LastModifiedByRole = "Checker",
                     Remarks = remarks
                 };
+                var currentRecord = await _unitOfWork.ItemSupplierRefAttributesRepository.GetSingleFilteredAsync($"item_id = '{auditRecord.ItemId}' AND vendor_id = '{auditRecord.VendorId}' AND source = '{auditRecord.Source}'");
+                if (currentRecord != null) await _columnEdit.KeepLockedValuesAsync(ColumnEditCatalog.ItemSupplier, updatedRecord, currentRecord);
                 // await _unitOfWork.ItemSupplierRefAttributesRepository.UpdateAsync(updatedRecord, updatedRecord.ItemId, "item_id");
                 await _unitOfWork.ItemSupplierRefAttributesRepository.UpdateAsync(updatedRecord, updatedRecord.ItemId, "item_id", "source",
                         auditRecord.Source, "vendor_id", auditRecord.VendorId);

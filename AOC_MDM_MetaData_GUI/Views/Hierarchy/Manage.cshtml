@@ -57,6 +57,12 @@
                         and @Model.Items item(s)@(Model.Level == "level3" ? $", plus {Model.PendingApprovals} pending approval(s)" : "").
                         Names must be unique within a level (not case-sensitive).
                     </p>
+                    @if (ViewBag.RenameLocked == true)
+                    {
+                        <p class="text-danger small mb-0">Renaming is locked by an administrator (Administration &gt; Column Editing).</p>
+                    }
+                    else
+                    {
                     <form asp-action="Rename" method="post" class="d-flex gap-2">
                         <input type="hidden" name="level" value="@Model.Level" />
                         <input type="hidden" name="id" value="@Model.Name" />
@@ -64,6 +70,7 @@
                         <button type="submit" class="btn btn-primary text-nowrap"
                                 onclick="return confirm('Rename this @Model.LevelLabel and everything that uses it?')">Rename</button>
                     </form>
+                    }
                 </div>
             </div>
 

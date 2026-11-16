@@ -126,7 +126,8 @@ namespace AOC_MDM_MetaData_GUI.Controllers
             if (result)
             {
                 _logger.LogInformation($"Ending VendorRefAttriController Approved method for result: {result}");
-                TempData["alertMessage"] = "Vendor approval successful! The vendor is now active in the system.";
+                TempData["alertMessage"] = "Vendor approval successful! The vendor is now active in the system."
+                    + await HttpContext.RequestServices.GetRequiredService<IColumnEditService>().DescribeLockedForApprovalAsync("vendor");
                 return RedirectToAction(nameof(VendorAudit));
             }
             else { return View(); }

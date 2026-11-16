@@ -9,6 +9,7 @@ namespace AOC_MDM_MetaData_GUI.Controllers
     public class SpendAreaController : Controller
     {
         private IHierarchyService HierarchyService => HttpContext.RequestServices.GetRequiredService<IHierarchyService>();
+        private IColumnEditService ColumnEdit => HttpContext.RequestServices.GetRequiredService<IColumnEditService>();
 
         private readonly IMDMSpendAreaService _mdmSpendAreaService;
         private readonly ILogger<SpendAreaController> _logger;
@@ -106,6 +107,12 @@ namespace AOC_MDM_MetaData_GUI.Controllers
         [RoleRequirement(3)] //3 => Approver or above (min role)
         public async Task<ActionResult> Enable(string id)
         {
+            if (await ColumnEdit.IsLockedAsync("spendarea", "Enabled"))
+            {
+                TempData["errorMessage"] = "The Enabled column is locked by an administrator (Administration > Column Editing).";
+                return RedirectToAction(nameof(Index));
+            }
+            
             var res = await _mdmSpendAreaService.GetFilteredAsync(id);
 
             var username = _userRoleService.CurrentUserName;

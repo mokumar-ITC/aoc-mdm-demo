@@ -14,17 +14,20 @@ namespace AOC_MDM.Services.Service
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ILogger<MDMSpendAreaService> _logger;
+        private readonly IColumnEditService _columnEdit;
 
 
         public MDMSpendAreaService(
             IUnitOfWork unitOfWork,
             IMapper mapper
             , ILogger<MDMSpendAreaService> logger
+            , IColumnEditService columnEdit
             )
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _logger = logger;
+            _columnEdit = columnEdit;
         }
 
         public async Task<IEnumerable<MDMSpendAreaDTO>> GetSpendAreaAsync()
@@ -96,6 +99,8 @@ namespace AOC_MDM.Services.Service
         {
             try
             {
+                var currentRecord = await GetFilteredAsync(updatedRecord.spend_area);
+                if (currentRecord != null) await _columnEdit.KeepLockedValuesAsync(ColumnEditCatalog.SpendArea, updatedRecord, currentRecord);
                 // Update the main table
                 updatedRecord.UpdatedBy = checkerId;
                 updatedRecord.UpdatedDate = DateTime.UtcNow;
@@ -137,6 +142,7 @@ namespace AOC_MDM.Services.Service
                     if (dbEntitiesDict.TryGetValue(uiEntity.spend_area, out var existingEntity))
                     {
                         // Update only if a record exists
+                        await _columnEdit.KeepLockedValuesAsync(ColumnEditCatalog.SpendArea, uiEntity, existingEntity);
                         existingEntity.Enabled = uiEntity.Enabled;
 
                         existingEntity.UpdatedBy = checkerId;

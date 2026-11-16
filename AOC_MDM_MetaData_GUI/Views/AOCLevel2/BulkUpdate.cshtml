@@ -91,7 +91,7 @@
                         var item = Model.Items[i];
                         <tr>
                             <td>
-                                <input type="checkbox" class="toggleCheckbox" onchange="onCheckEvent()" name="Items[@i].IsSelected" value="true" @(item.IsSelected ? "checked" : "") />
+                                <input type="checkbox" class="toggleCheckbox" onchange="onCheckEvent()" name="Items[@i].IsSelected" value="true" checked="@item.IsSelected" />
 
                             </td>
                             <td>
